@@ -82,7 +82,6 @@ class CodeScanner {
         this.isScanning = false;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
         setTimeout(() => {
-            // Lógica de validación QR
             let mensaje = '';
             let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
             if (!match) {
@@ -94,19 +93,16 @@ class CodeScanner {
                 if (!faccion) {
                     mensaje = 'QR INCORRECTO';
                 } else {
-                    // Buscar en mogData
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
                     if (persona) {
                         persona.ingreso = 'Yes';
                         mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                        guardarEnLocalStorage();
+                        // Guardar en Firebase solo si está en la lista
+                        guardarIngresoEnFirebase(nombre, faccion, 'Yes');
                     } else {
-                        // Añadir nuevo registro
-                        mogData.push({ nombre, faccion, ingreso: 'Yes_New' });
-                        mensaje = `Bienvenido ${nombre}. Tu facción es ${faccion}`;
+                        mensaje = 'No estás en la lista';
                     }
-                    guardarEnLocalStorage(); // Guardar cambios
-                    // Guardar en Firebase
-                    guardarIngresoEnFirebase(nombre, faccion, persona ? 'Yes' : 'Yes_New');
                 }
             }
             this.showQrPopup(mensaje);
