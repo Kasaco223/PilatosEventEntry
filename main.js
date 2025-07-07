@@ -132,14 +132,12 @@ class CodeScanner {
         this.qrPopup.innerHTML = `<div class=\"qr-popup-content\">${value}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
-        playEffectVideo();
         console.log('showQrPopup ejecutado');
     }
 
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
         this.qrPopup.innerHTML = '';
-        playEffectVideo();
         console.log('hideQrPopup ejecutado');
     }
 }
@@ -246,24 +244,4 @@ function descargarCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-}
-
-// Función para mostrar el video de efecto una vez
-function playEffectVideo() {
-    const container = document.getElementById('effect-video-container');
-    const video = document.getElementById('effect-video');
-    if (!container || !video) return;
-    container.style.display = 'block';
-    video.currentTime = 0;
-    if (video.readyState >= 3) {
-        video.play();
-    } else {
-        video.oncanplaythrough = () => {
-            video.play();
-        };
-        video.load();
-    }
-    video.onended = () => {
-        container.style.display = 'none';
-    };
 } 
