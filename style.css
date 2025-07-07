@@ -437,26 +437,28 @@ header p {
 
 /* Obscura (ROCK) */
 .qr-popup.obscura {
-    background: linear-gradient(135deg, rgba(30,30,30,0.95) 80%, rgba(80,0,0,0.7) 100%);
-    color: #daa520;
+    background: 
+        linear-gradient(120deg, rgba(65,65,65,0.25) 0%, rgba(0,0,0,0.35) 100%),
+        #900d07;
+    color: #000;
     box-shadow: 0 0 40px 10px rgba(0,0,0,0.8);
     animation: popup-fade-zoom 0.7s cubic-bezier(.68,-0.55,.27,1.55);
 }
 .qr-popup.obscura .qr-popup-content {
-    color: #daa520;
-    text-shadow: 2px 2px 8px #000, 0 0 10px #80000044;
+    color: #000;
+    text-shadow: 2px 2px 8px #414141, 0 0 10px #414141;
 }
 
 /* Lumen */
 .qr-popup.lumen {
-    background: linear-gradient(120deg, rgba(255,255,255,0.92) 80%, rgba(200,200,200,0.7) 100%);
-    color: #222;
+    background: #fff;
+    color: #b3b3b3;
     box-shadow: 0 0 30px 5px rgba(180,180,180,0.5);
     animation: popup-slide-down 0.7s cubic-bezier(.68,-0.55,.27,1.55);
 }
 .qr-popup.lumen .qr-popup-content {
-    color: #222;
-    text-shadow: 1px 1px 6px #fff, 0 0 8px #bbb;
+    color: #b3b3b3;
+    text-shadow: 2px 2px 8px #ede9cc, 0 0 10px #ede9cc;
 }
 
 /* Prima */
