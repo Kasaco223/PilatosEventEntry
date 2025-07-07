@@ -74,24 +74,43 @@ class CodeScanner {
         this.lastResult = '';
     }
 
-    handleScanResult(value) {
-        this.showQrPopup(value);
-        this.stopScanning();
-        clearTimeout(this.scanTimeout);
-        this.scanTimeout = setTimeout(() => {
-            this.hideQrPopup();
-            this.startScanning();
-        }, 2000);
+    async handleScanResult(value) {
+        // Pausar el escaneo 0.25s antes de mostrar el popup
+        this.isScanning = false;
+        if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
+        setTimeout(() => {
+            this.showQrPopup(value);
+            // Forzar repintado
+            void this.qrPopup.offsetWidth;
+            // Log para depuración
+            console.log('Popup mostrado con valor:', value);
+            // Esperar 0.25s después de mostrar el popup antes de detener la cámara
+            setTimeout(() => {
+                this.stopScanning();
+                clearTimeout(this.scanTimeout);
+                // Aumentar el tiempo del popup a 5 segundos
+                this.scanTimeout = setTimeout(() => {
+                    this.hideQrPopup();
+                    this.startScanning();
+                }, 5000);
+            }, 250);
+        }, 250);
     }
 
     showQrPopup(value) {
         this.qrPopup.innerHTML = `<div class="qr-popup-content">${value}</div>`;
         this.qrPopup.classList.remove('hidden');
+        // Forzar repintado
+        void this.qrPopup.offsetWidth;
+        // Log para depuración
+        console.log('showQrPopup ejecutado');
     }
 
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
         this.qrPopup.innerHTML = '';
+        // Log para depuración
+        console.log('hideQrPopup ejecutado');
     }
 }
 

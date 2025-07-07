@@ -367,6 +367,14 @@ header p {
         height: 20px;
         border-width: 2px;
     }
+    .qr-popup-content {
+        font-size: 1.2rem !important;
+        padding: 10px;
+        word-break: break-all;
+    }
+    .qr-popup {
+        font-size: 1.2rem !important;
+    }
 }
 
 /* Popup de QR estilo dorado sobre negro */
