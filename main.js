@@ -147,6 +147,10 @@ class CodeScanner {
 document.addEventListener('DOMContentLoaded', () => {
     const scanner = new CodeScanner();
     window.codeScanner = scanner;
+    const video = document.getElementById('effect-video');
+    if (video) {
+        video.load();
+    }
 });
 
 /**
@@ -251,7 +255,14 @@ function playEffectVideo() {
     if (!container || !video) return;
     container.style.display = 'block';
     video.currentTime = 0;
-    video.play();
+    if (video.readyState >= 3) {
+        video.play();
+    } else {
+        video.oncanplaythrough = () => {
+            video.play();
+        };
+        video.load();
+    }
     video.onended = () => {
         container.style.display = 'none';
     };
