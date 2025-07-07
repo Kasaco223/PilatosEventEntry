@@ -117,9 +117,7 @@ class CodeScanner {
     }
 
     showQrPopup(value) {
-        // Quitar clases de facción previas
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
-        // Detectar facción en el mensaje y aplicar clase
         let faccion = null;
         if (typeof value === 'string') {
             if (value.includes('Obscura')) faccion = 'obscura';
@@ -131,16 +129,17 @@ class CodeScanner {
         if (faccion) {
             this.qrPopup.classList.add(faccion);
         }
-        this.qrPopup.innerHTML = `<div class="qr-popup-content">${value}</div>`;
+        this.qrPopup.innerHTML = `<div class=\"qr-popup-content\">${value}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
+        playEffectVideo();
         console.log('showQrPopup ejecutado');
     }
 
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
         this.qrPopup.innerHTML = '';
-        // Log para depuración
+        playEffectVideo();
         console.log('hideQrPopup ejecutado');
     }
 }
@@ -243,4 +242,17 @@ function descargarCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// Función para mostrar el video de efecto una vez
+function playEffectVideo() {
+    const container = document.getElementById('effect-video-container');
+    const video = document.getElementById('effect-video');
+    if (!container || !video) return;
+    container.style.display = 'block';
+    video.currentTime = 0;
+    video.play();
+    video.onended = () => {
+        container.style.display = 'none';
+    };
 } 

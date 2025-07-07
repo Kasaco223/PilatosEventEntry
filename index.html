@@ -8,7 +8,9 @@
     <!-- Las librerías se importan como módulos ES6 en main.js -->
 </head>
 <body>
-    <video id="wipe-video" src="/wipe.mp4" autoplay loop muted playsinline style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3000;pointer-events:none;object-fit:cover;"></video>
+    <div id="effect-video-container" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3000;pointer-events:none;">
+        <video id="effect-video" src="/Trance_Glitch.webm" muted playsinline style="width:100vw;height:100vh;object-fit:cover;"></video>
+    </div>
     <div class="container">
         <div class="scanner-container">
             <div class="camera-container">
