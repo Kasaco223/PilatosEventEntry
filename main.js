@@ -5,6 +5,10 @@
 
 // Importar ZXing para escaneo universal
 import { BrowserMultiFormatReader } from '@zxing/browser';
+// Importar Firebase
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set } from "firebase/database";
+import { getAnalytics } from "firebase/analytics";
 
 class CodeScanner {
     constructor() {
@@ -101,6 +105,8 @@ class CodeScanner {
                         mensaje = `Bienvenido ${nombre}. Tu facción es ${faccion}`;
                     }
                     guardarEnLocalStorage(); // Guardar cambios
+                    // Guardar en Firebase
+                    guardarIngresoEnFirebase(nombre, faccion, persona ? 'Yes' : 'Yes_New');
                 }
             }
             this.showQrPopup(mensaje);
@@ -244,4 +250,30 @@ function descargarCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// Configuración de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBdRurntttFacCwYBrtIk14ciDepiJ7wfM",
+  authDomain: "ingresopilatos.firebaseapp.com",
+  databaseURL: "https://ingresopilatos-default-rtdb.firebaseio.com",
+  projectId: "ingresopilatos",
+  storageBucket: "ingresopilatos.firebasestorage.app",
+  messagingSenderId: "477684863667",
+  appId: "1:477684863667:web:1c7bf31738c7d1460d96c6",
+  measurementId: "G-Y1W4YNTD9P"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const analytics = getAnalytics(app);
+
+function guardarIngresoEnFirebase(nombre, faccion, ingreso) {
+    const now = new Date();
+    const horaColombia = new Date(now.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+    set(ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_')), {
+        faccion: faccion,
+        ingreso: ingreso,
+        hora: horaColombia.toISOString().replace('T', ' ').substring(0, 19)
+    });
 } 
