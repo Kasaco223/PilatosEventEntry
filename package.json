@@ -4,7 +4,7 @@
   "description": "Escáner de códigos de barras y QR usando la cámara del navegador",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --no-open",
     "build": "vite build",
     "preview": "vite preview",
     "serve": "vite preview"
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@zxing/browser": "^0.1.5",
+    "firebase": "^11.10.0",
     "html5-qrcode": "^2.3.8",
     "quagga": "^0.12.1"
   }
