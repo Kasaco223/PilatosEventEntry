@@ -22,7 +22,6 @@ build/
 *.swp
 *.swo
 *~
-*.mov
 
 # OS generated files
 .DS_Store

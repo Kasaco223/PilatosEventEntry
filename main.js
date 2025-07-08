@@ -7,7 +7,7 @@
 import { BrowserMultiFormatReader } from '@zxing/browser';
 // Importar Firebase
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, set, get } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
 
 class CodeScanner {
@@ -81,7 +81,7 @@ class CodeScanner {
     async handleScanResult(value) {
         this.isScanning = false;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
-        setTimeout(() => {
+        setTimeout(async () => {
             let mensaje = '';
             let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
             if (!match) {
@@ -95,11 +95,32 @@ class CodeScanner {
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
                     if (persona) {
-                        persona.ingreso = 'Yes';
-                        mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                        guardarEnLocalStorage();
-                        // Guardar en Firebase solo si está en la lista
-                        guardarIngresoEnFirebase(nombre, faccion, 'Yes');
+                        if (!navigator.onLine) {
+                            // Sin internet: solo usa la base local
+                            if (persona.ingreso !== 'Yes') {
+                                persona.ingreso = 'Yes';
+                                mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                guardarEnLocalStorage();
+                            } else {
+                                mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                            }
+                        } else {
+                            // Con internet: consulta y guarda en Firebase
+                            const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
+                            try {
+                                const snapshot = await get(dbRef);
+                                if (!snapshot.exists()) {
+                                    persona.ingreso = 'Yes';
+                                    mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                    guardarEnLocalStorage();
+                                    guardarIngresoEnFirebase(nombre, faccion, 'Yes');
+                                } else {
+                                    mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                }
+                            } catch (error) {
+                                mensaje = 'Error consultando ingreso. Intenta de nuevo.';
+                            }
+                        }
                     } else {
                         mensaje = 'No estás en la lista';
                     }
