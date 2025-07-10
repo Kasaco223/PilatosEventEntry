@@ -327,12 +327,7 @@ function descargarCSV() {
 }
 
 // --- Configuración de IP del backend ---
-const BACKEND_KEY = 'backend_ip';
-let backendIp = localStorage.getItem(BACKEND_KEY);
-if (!backendIp) {
-    backendIp = prompt('Introduce la IP del servidor padre (ej: 192.168.1.2:3001):', '192.168.1.2:3001');
-    if (backendIp) localStorage.setItem(BACKEND_KEY, backendIp);
-}
+const backendIp = "192.168.1.13:3001"; // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }
