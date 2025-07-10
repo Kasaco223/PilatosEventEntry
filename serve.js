@@ -79,7 +79,7 @@ function getLocalIp() {
   return 'localhost';
 }
 
-const PORT = 3001;
+const PORT = 4321;
 const HOST = '0.0.0.0';
 let isServer = true;
 
