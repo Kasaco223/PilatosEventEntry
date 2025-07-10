@@ -327,7 +327,7 @@ function descargarCSV() {
 }
 
 // --- Configuración de IP del backend ---
-const backendIp = "192.168.0.115:4321"; // IP FIJA DEL BACKEND (Raspberry Pi)
+const backendIp = "192.168.1.13:4321"; // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }
