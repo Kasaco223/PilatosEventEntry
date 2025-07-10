@@ -96,29 +96,65 @@ class CodeScanner {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
                     if (persona) {
                         if (!navigator.onLine) {
-                            // Sin internet: solo usa la base local
+                            // Sin internet: solo usa la base local (SQLite)
                             if (persona.ingreso !== 'Yes') {
-                                persona.ingreso = 'Yes';
-                                mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                guardarEnLocalStorage();
+                                // Registrar ingreso en SQLite
+                                fetch(getBackendUrl('/ingreso'), {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ nombre })
+                                })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                    } else {
+                                        mensaje = 'Error registrando ingreso local.';
+                                    }
+                                    this.showQrPopup(mensaje);
+                                })
+                                .catch(err => {
+                                    mensaje = 'Error registrando ingreso local.';
+                                    this.showQrPopup(mensaje);
+                                });
                             } else {
                                 mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                this.showQrPopup(mensaje);
                             }
                         } else {
-                            // Con internet: consulta y guarda en Firebase
+                            // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
-                                    persona.ingreso = 'Yes';
-                                    mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    guardarEnLocalStorage();
-                                    guardarIngresoEnFirebase(nombre, faccion, 'Yes');
+                                    // Firebase
+                                    // guardarIngresoEnFirebase(nombre, faccion, 'Yes');
+                                    // SQLite
+                                    fetch(getBackendUrl('/ingreso'), {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ nombre })
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                        } else {
+                                            mensaje = 'Error registrando ingreso local.';
+                                        }
+                                        this.showQrPopup(mensaje);
+                                    })
+                                    .catch(err => {
+                                        mensaje = 'Error registrando ingreso local.';
+                                        this.showQrPopup(mensaje);
+                                    });
                                 } else {
                                     mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                    this.showQrPopup(mensaje);
                                 }
                             } catch (error) {
                                 mensaje = 'Error consultando ingreso. Intenta de nuevo.';
+                                this.showQrPopup(mensaje);
                             }
                         }
                     } else {
@@ -267,6 +303,17 @@ function descargarCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// --- Configuración de IP del backend ---
+const BACKEND_KEY = 'backend_ip';
+let backendIp = localStorage.getItem(BACKEND_KEY);
+if (!backendIp) {
+    backendIp = prompt('Introduce la IP del servidor padre (ej: 192.168.1.2:3001):', '192.168.1.2:3001');
+    if (backendIp) localStorage.setItem(BACKEND_KEY, backendIp);
+}
+function getBackendUrl(path) {
+    return `http://${backendIp}${path}`;
 }
 
 // Configuración de Firebase

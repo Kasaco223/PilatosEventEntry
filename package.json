@@ -23,6 +23,9 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7",
+    "cors": "^2.8.5",
     "@zxing/browser": "^0.1.5",
     "firebase": "^11.10.0",
     "html5-qrcode": "^2.3.8",
