@@ -188,7 +188,25 @@ class CodeScanner {
         if (faccion) {
             this.qrPopup.classList.add(faccion);
         }
-        this.qrPopup.innerHTML = `<div class=\"qr-popup-content\">${value}</div>`;
+        // Si es azur, agregar el video de fondo solo si no existe
+        if (faccion === 'azur') {
+            if (!this.qrPopup.querySelector('video.bg-video-azur')) {
+                const video = document.createElement('video');
+                video.src = '/Mar.mp4';
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.className = 'bg-video-azur';
+                video.playsInline = true;
+                video.setAttribute('loading', 'lazy');
+                this.qrPopup.insertBefore(video, this.qrPopup.firstChild);
+            }
+        } else {
+            // Si no es azur, eliminar el video si existe
+            const v = this.qrPopup.querySelector('video.bg-video-azur');
+            if (v) v.remove();
+        }
+        this.qrPopup.innerHTML += `<div class=\"qr-popup-content\">${value}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
@@ -196,6 +214,9 @@ class CodeScanner {
 
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
+        // Eliminar el video de fondo si existe
+        const v = this.qrPopup.querySelector('video.bg-video-azur');
+        if (v) v.remove();
         this.qrPopup.innerHTML = '';
         console.log('hideQrPopup ejecutado');
     }
