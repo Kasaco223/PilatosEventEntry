@@ -76,6 +76,13 @@ class CodeScanner {
         }
         this.qrReader.innerHTML = '';
         this.lastResult = '';
+        // Blindaje extra: liberar video principal si está en el popup
+        let video = document.getElementById('video-principal');
+        if (video && this.qrPopup.contains(video)) {
+            video.pause();
+            video.style.display = 'none';
+            this.qrPopup.removeChild(video);
+        }
     }
 
     async handleScanResult(value) {
@@ -188,23 +195,23 @@ class CodeScanner {
         if (faccion) {
             this.qrPopup.classList.add(faccion);
         }
-        // Si es azur, agregar el video de fondo solo si no existe
+        // Si es azur, mostrar el video precargado principal
         if (faccion === 'azur') {
-            if (!this.qrPopup.querySelector('video.bg-video-azur')) {
-                const video = document.createElement('video');
-                video.src = '/Mar.mp4';
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = true;
-                video.className = 'bg-video-azur';
-                video.playsInline = true;
-                video.setAttribute('loading', 'lazy');
+            let video = document.getElementById('video-principal');
+            if (video && !this.qrPopup.contains(video)) {
+                video.style.display = 'block';
+                video.currentTime = 0;
+                video.play();
                 this.qrPopup.insertBefore(video, this.qrPopup.firstChild);
             }
         } else {
-            // Si no es azur, eliminar el video si existe
-            const v = this.qrPopup.querySelector('video.bg-video-azur');
-            if (v) v.remove();
+            // Si no es azur, ocultar el video si existe
+            let video = document.getElementById('video-principal');
+            if (video && this.qrPopup.contains(video)) {
+                video.pause();
+                video.style.display = 'none';
+                this.qrPopup.removeChild(video);
+            }
         }
         this.qrPopup.innerHTML += `<div class=\"qr-popup-content\">${value}</div>`;
         this.qrPopup.classList.remove('hidden');
@@ -214,9 +221,13 @@ class CodeScanner {
 
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
-        // Eliminar el video de fondo si existe
-        const v = this.qrPopup.querySelector('video.bg-video-azur');
-        if (v) v.remove();
+        // Ocultar y pausar el video si existe
+        let video = document.getElementById('video-principal');
+        if (video && this.qrPopup.contains(video)) {
+            video.pause();
+            video.style.display = 'none';
+            this.qrPopup.removeChild(video);
+        }
         this.qrPopup.innerHTML = '';
         console.log('hideQrPopup ejecutado');
     }
