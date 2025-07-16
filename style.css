@@ -1,3 +1,14 @@
+@font-face {
+    font-family: 'Glancyr';
+    src: url('/public/fonts/Glancyr-Medium.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    font-family: 'Glancyr', Arial, sans-serif !important;
+}
+
 /* Reset y configuración base */
 * {
     margin: 0;
@@ -34,14 +45,14 @@ header {
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 2rem; /* 2.5rem * 0.8 */
     margin-bottom: 10px;
     text-shadow: none;
     color: #daa520;
 }
 
 header p {
-    font-size: 1.1rem;
+    font-size: 0.88rem; /* 1.1rem * 0.8 */
     opacity: 1;
     color: #daa520;
 }
@@ -198,7 +209,7 @@ header p {
     padding: 15px 30px;
     border: none;
     border-radius: 10px;
-    font-size: 1.1rem;
+    font-size: 0.88rem; /* 1.1rem * 0.8 */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -232,7 +243,7 @@ header p {
 }
 
 .btn-icon {
-    font-size: 1.2rem;
+    font-size: 0.96rem; /* 1.2rem * 0.8 */
 }
 
 /* Contenedor de resultados */
@@ -247,7 +258,7 @@ header p {
 .results-container h3 {
     margin-bottom: 20px;
     color: #333;
-    font-size: 1.5rem;
+    font-size: 1.2rem; /* 1.5rem * 0.8 */
 }
 
 .results-list {
@@ -265,7 +276,7 @@ header p {
 }
 
 .hint {
-    font-size: 0.9rem;
+    font-size: 0.72rem; /* 0.9rem * 0.8 */
     opacity: 0.7;
 }
 
@@ -286,7 +297,7 @@ header p {
 }
 
 .result-type {
-    font-size: 0.8rem;
+    font-size: 0.64rem; /* 0.8rem * 0.8 */
     color: #6c757d;
     text-transform: uppercase;
     font-weight: bold;
@@ -295,12 +306,12 @@ header p {
 
 .result-value {
     font-family: 'Courier New', monospace;
-    font-size: 1rem;
+    font-size: 0.8rem; /* 1rem * 0.8 */
     word-break: break-all;
 }
 
 .result-time {
-    font-size: 0.8rem;
+    font-size: 0.64rem; /* 0.8rem * 0.8 */
     color: #6c757d;
     margin-left: 15px;
 }
@@ -343,7 +354,7 @@ header p {
     }
     
     header h1 {
-        font-size: 2rem;
+        font-size: 1.6rem; /* 2rem * 0.8 */
     }
     
     .scanner-container {
@@ -386,12 +397,12 @@ header p {
         border-width: 2px;
     }
     .qr-popup-content {
-        font-size: 1.2rem !important;
+        font-size: 0.96rem !important; /* 1.2rem * 0.8 */
         padding: 10px;
         word-break: break-all;
     }
     .qr-popup {
-        font-size: 1.2rem !important;
+        font-size: 0.96rem !important; /* 1.2rem * 0.8 */
     }
 }
 
@@ -428,7 +439,7 @@ header p {
     align-items: center;
     justify-content: center;
     color: #daa520;
-    font-size: 3rem;
+    font-size: 2.4rem;
     font-weight: bold;
     text-align: center;
     padding: 0;
@@ -448,7 +459,7 @@ header p {
     max-height: 100vh;
     overflow: auto;
     word-break: break-all;
-    font-size: 3rem;
+    font-size: 2.4rem !important; /* 3rem * 0.8 */
     color: #daa520;
     font-family: 'Arial Black', Arial, sans-serif;
 }
@@ -526,7 +537,7 @@ header p {
     justify-content: center;
     width: 90vw;
     height: auto;
-    font-size: 3vw;
+    font-size: 2.4vw;
     color: #b3e0ff;
     font-weight: bold;
     text-align: center;
