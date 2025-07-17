@@ -185,20 +185,36 @@ class CodeScanner {
     showQrPopup(value) {
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
         let faccion = null;
+        let nombre = '';
+        let fac = '';
+        let mensaje = value;
+        // Detectar facción y nombre si el mensaje es del tipo esperado
         if (typeof value === 'string') {
             if (value.includes('Obscura')) faccion = 'obscura';
             else if (value.includes('Lumen')) faccion = 'lumen';
             else if (value.includes('Prima')) faccion = 'prima';
             else if (value.includes('Terra')) faccion = 'terra';
             else if (value.includes('Azur')) faccion = 'azur';
+            // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
+            const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
+            if (match) {
+                nombre = match[1].trim();
+                fac = match[2].trim();
+                let facClass = faccion ? faccion : '';
+                mensaje = `<span class='bienvenida'>Bienvenido de vuelta </span><span class='nombre-usuario'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
+            }
         }
         if (faccion) {
             this.qrPopup.classList.add(faccion);
         }
-        // Eliminar cualquier video de fondo si existe (limpieza)
-        const v = this.qrPopup.querySelector('video.bg-video-azur');
-        if (v) v.remove();
-        this.qrPopup.innerHTML = `<div class=\"qr-popup-content\">${value}</div>`;
+        // Limpiar el contenido anterior
+        this.qrPopup.innerHTML = '';
+        // Construir el HTML del popup
+        let videoHTML = '';
+        if (faccion) {
+            videoHTML = `<video class='bg-video-faccion' src='public/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4' autoplay loop muted playsinline tabindex='-1'></video>`;
+        }
+        this.qrPopup.innerHTML = videoHTML + `<div class='qr-popup-content'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
@@ -207,7 +223,7 @@ class CodeScanner {
     hideQrPopup() {
         this.qrPopup.classList.add('hidden');
         // Eliminar cualquier video de fondo si existe (limpieza)
-        const v = this.qrPopup.querySelector('video.bg-video-azur');
+        const v = this.qrPopup.querySelector('video.bg-video-faccion');
         if (v) v.remove();
         this.qrPopup.innerHTML = '';
         console.log('hideQrPopup ejecutado');
@@ -319,7 +335,7 @@ function descargarCSV() {
 }
 
 // --- Configuración de IP del backend ---
-const backendIp = "192.168.1.31:4321"; // IP FIJA DEL BACKEND
+const backendIp = "192.168.1.13:4321"; // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }
