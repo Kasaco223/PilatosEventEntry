@@ -29,6 +29,7 @@ class CodeScanner {
     async startScanning() {
         if (this.isScanning) return;
         this.isScanning = true;
+        console.log('Solicitando acceso a la cámara por primera vez...');
         try {
             // Obtener acceso a la cámara
             const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
