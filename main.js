@@ -213,7 +213,7 @@ class CodeScanner {
         // Construir el HTML del popup
         let videoHTML = '';
         if (faccion) {
-            videoHTML = `<video class='bg-video-faccion' src='public/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4' autoplay loop muted playsinline tabindex='-1'></video>`;
+            videoHTML = `<video class='bg-video-faccion' src='/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4' autoplay loop muted playsinline tabindex='-1'></video>`;
         }
         this.qrPopup.innerHTML = videoHTML + `<div class='qr-popup-content'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
