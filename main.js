@@ -102,14 +102,11 @@ class CodeScanner {
                     mensaje = 'QR INCORRECTO';
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
-                    let esNuevo = false;
-                    let facClass = faccion ? faccion.toLowerCase() : '';
                     if (persona) {
-                        // Función para mostrar el popup con el formato correcto
-                        const mostrarBienvenida = (nuevo) => {
-                            const saludo = nuevo ? 'Bienvenido' : 'Bienvenido de vuelta';
-                            mensaje = `<span class='bienvenida'>${saludo}</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
-                            this.showQrPopup(mensaje);
+                        let esNuevo = false;
+                        let facClass = faccion ? faccion.toLowerCase() : '';
+                        let mostrarPopup = (html) => {
+                            this.showQrPopup(html);
                             void this.qrPopup.offsetWidth;
                             setTimeout(() => {
                                 this.stopScanning();
@@ -122,7 +119,7 @@ class CodeScanner {
                         };
                         if (!navigator.onLine) {
                             if (persona.ingreso !== 'Yes') {
-                                // Registrar ingreso en SQLite
+                                esNuevo = true;
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -130,22 +127,23 @@ class CodeScanner {
                                 })
                                 .then(res => res.json())
                                 .then(data => {
-                                    mostrarBienvenida(true);
+                                    mostrarPopup(`<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
                                 })
                                 .catch(err => {
-                                    mensaje = 'Error registrando ingreso local.';
-                                    this.showQrPopup(mensaje);
+                                    mostrarPopup('Error registrando ingreso local.');
                                 });
-                            } else {
-                                mostrarBienvenida(false);
+                                return;
                             }
+                            // Usuario recurrente offline
+                            mostrarPopup(`<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
+                            return;
                         } else {
                             // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
-                                    // Registrar ingreso en SQLite
+                                    esNuevo = true;
                                     fetch(getBackendUrl('/ingreso'), {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -153,21 +151,21 @@ class CodeScanner {
                                     })
                                     .then(res => res.json())
                                     .then(data => {
-                                        mostrarBienvenida(true);
+                                        mostrarPopup(`<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
                                     })
                                     .catch(err => {
-                                        mensaje = 'Error registrando ingreso local.';
-                                        this.showQrPopup(mensaje);
+                                        mostrarPopup('Error registrando ingreso local.');
                                     });
-                                } else {
-                                    mostrarBienvenida(false);
+                                    return;
                                 }
+                                // Usuario recurrente online
+                                mostrarPopup(`<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
+                                return;
                             } catch (error) {
-                                mensaje = 'Error consultando ingreso. Intenta de nuevo.';
-                                this.showQrPopup(mensaje);
+                                mostrarPopup('Error consultando ingreso. Intenta de nuevo.');
+                                return;
                             }
                         }
-                        return; // Importante: no mostrar popup dos veces
                     } else {
                         mensaje = 'No estás en la lista';
                     }
@@ -199,24 +197,30 @@ class CodeScanner {
             else if (value.includes('Prima')) faccion = 'prima';
             else if (value.includes('Terra')) faccion = 'terra';
             else if (value.includes('Azur')) faccion = 'azur';
-            const match = value.match(/^Bienvenido( de vuelta)? ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
+            // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
+            const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
             if (match) {
-                nombre = match[2].trim();
-                fac = match[3].trim();
+                nombre = match[1].trim();
+                fac = match[2].trim();
+                let facClass = faccion ? faccion : '';
+                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
             }
+        }
+        if (faccion) {
+            this.qrPopup.classList.add(faccion);
         }
         // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
         const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
         if (oldVideo) {
             try { oldVideo.pause(); } catch (e) {}
-            oldVideo.style.display = 'none';
-            videoPreloadStore.appendChild(oldVideo);
+            oldVideo.remove();
         }
         this.qrPopup.innerHTML = '';
         // Mover el video precargado al popup si existe y no está ya ahí
-        if (faccion && faccionVideos[faccion.toLowerCase()]) {
-            const video = faccionVideos[faccion.toLowerCase()];
+        if (faccion && faccionVideos[faccion]) {
+            const video = faccionVideos[faccion];
             if (video.parentNode !== this.qrPopup) {
+                // Quitar de su contenedor actual
                 if (video.parentNode) video.parentNode.removeChild(video);
                 video.className = 'bg-video-faccion';
                 video.autoplay = true;
@@ -227,8 +231,7 @@ class CodeScanner {
                 this.qrPopup.appendChild(video);
             }
         }
-        // Agregar el contenido HTML sin borrar el video
-        this.qrPopup.insertAdjacentHTML('beforeend', `<div class='qr-popup-content fade-in'>${mensaje}</div>`);
+        this.qrPopup.innerHTML += `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
