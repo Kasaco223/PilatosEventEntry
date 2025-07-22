@@ -13,6 +13,7 @@
 
 body, html {
   background: #000 !important;
+  cursor: none !important;
 }
 
 /* Scrollbars invisibles pero presentes */
@@ -199,7 +200,7 @@ body, html, * {
 
 .nombre-usuario.spaced,
 .faccion-label-nombre {
-  animation: slideUpFadeIn 1.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   opacity: 0;
 }
 
