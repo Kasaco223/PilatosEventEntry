@@ -215,16 +215,20 @@ class CodeScanner {
             oldVideo.remove();
         }
         this.qrPopup.innerHTML = '';
-        // Construir el HTML del popup
+        // Mover el video precargado al popup si existe y no está ya ahí
         if (faccion && faccionVideos[faccion]) {
-            const videoClone = faccionVideos[faccion].cloneNode(true);
-            videoClone.className = 'bg-video-faccion';
-            videoClone.autoplay = true;
-            videoClone.loop = true;
-            videoClone.muted = true;
-            videoClone.playsInline = true;
-            videoClone.style.display = '';
-            this.qrPopup.appendChild(videoClone);
+            const video = faccionVideos[faccion];
+            if (video.parentNode !== this.qrPopup) {
+                // Quitar de su contenedor actual
+                if (video.parentNode) video.parentNode.removeChild(video);
+                video.className = 'bg-video-faccion';
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                video.style.display = '';
+                this.qrPopup.appendChild(video);
+            }
         }
         this.qrPopup.innerHTML += `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
@@ -236,11 +240,12 @@ class CodeScanner {
         this.qrPopup.classList.add('fade-out');
         setTimeout(() => {
             this.qrPopup.classList.add('hidden');
-            // Eliminar cualquier video de fondo si existe (limpieza)
+            // Mover cualquier video de fondo de vuelta al store oculto
             const v = this.qrPopup.querySelector('video.bg-video-faccion');
             if (v) {
-                try { v.pause(); } catch (e) {}
-                v.remove();
+                v.pause();
+                v.style.display = 'none';
+                videoPreloadStore.appendChild(v);
             }
             this.qrPopup.innerHTML = '';
             this.qrPopup.classList.remove('fade-out');
@@ -308,6 +313,7 @@ const faccionVideos = {};
 const faccionList = Object.values(FACCIONES).map(f => f.toLowerCase());
 const preloadOverlay = document.getElementById('preload-overlay');
 const preloadText = document.getElementById('preload-text');
+const videoPreloadStore = document.getElementById('video-preload-store');
 
 function preloadVideosSequentially(facciones, onComplete) {
     let index = 0;
@@ -325,6 +331,7 @@ function preloadVideosSequentially(facciones, onComplete) {
         video.style.display = 'none';
         video.addEventListener('canplaythrough', () => {
             faccionVideos[faccion] = video;
+            videoPreloadStore.appendChild(video); // Mantener en el DOM oculto
             index++;
             loadNext();
         });
@@ -333,7 +340,6 @@ function preloadVideosSequentially(facciones, onComplete) {
             index++;
             loadNext();
         });
-        document.body.appendChild(video);
         preloadText.textContent = `Cargando ${faccion.charAt(0).toUpperCase() + faccion.slice(1)}...`;
     }
     loadNext();
