@@ -329,7 +329,7 @@ if (!cargarDeLocalStorage()) {
             console.log('Base de datos cargada automáticamente y guardada en LocalStorage.');
         });
 }
-
+//changes
 // Descargar CSV actualizado
 function descargarCSV() {
     let csv = 'Nombre Persona,Facción,Ingreso\n';
