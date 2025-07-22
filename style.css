@@ -11,16 +11,6 @@
     font-style: normal;
 }
 
-body, html, #qr-reader, .qr-popup, .qr-popup-content, video, canvas {
-  border: none !important;
-  box-shadow: none !important;
-  background: #000 !important;
-}
-
-* {
-  cursor: none !important;
-}
-
 body, html, * {
   scrollbar-width: none !important; /* Firefox */
   -ms-overflow-style: none !important; /* IE 10+ */
