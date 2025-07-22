@@ -102,10 +102,11 @@ class CodeScanner {
                     mensaje = 'QR INCORRECTO';
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
-                    let facClass = faccion ? faccion.toLowerCase() : '';
                     if (persona) {
                         if (!navigator.onLine) {
+                            // Sin internet: solo usa la base local (SQLite)
                             if (persona.ingreso !== 'Yes') {
+                                // Registrar ingreso en SQLite
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -114,7 +115,7 @@ class CodeScanner {
                                 .then(res => res.json())
                                 .then(data => {
                                     if (data.success) {
-                                        mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                        mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                     } else {
                                         mensaje = 'Error registrando ingreso local.';
                                     }
@@ -125,14 +126,18 @@ class CodeScanner {
                                     this.showQrPopup(mensaje);
                                 });
                             } else {
-                                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                 this.showQrPopup(mensaje);
                             }
                         } else {
+                            // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
+                                    // Firebase
+                                    // guardarIngresoEnFirebase(nombre, faccion, 'Yes');
+                                    // SQLite
                                     fetch(getBackendUrl('/ingreso'), {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -141,7 +146,7 @@ class CodeScanner {
                                     .then(res => res.json())
                                     .then(data => {
                                         if (data.success) {
-                                            mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                            mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                         } else {
                                             mensaje = 'Error registrando ingreso local.';
                                         }
@@ -152,7 +157,7 @@ class CodeScanner {
                                         this.showQrPopup(mensaje);
                                     });
                                 } else {
-                                    mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                    mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                     this.showQrPopup(mensaje);
                                 }
                             } catch (error) {
@@ -349,7 +354,7 @@ const LOCAL_KEY = 'mogdata_cache';
 function guardarEnLocalStorage() {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(mogData));
 }
-
+//Testeo
 function cargarDeLocalStorage() {
     const data = localStorage.getItem(LOCAL_KEY);
     if (data) {
