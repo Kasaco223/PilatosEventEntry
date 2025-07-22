@@ -92,11 +92,12 @@ class CodeScanner {
         setTimeout(async () => {
             let mensaje = '';
             let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
+            let nombre = '';
             if (!match) {
                 mensaje = 'QR INCORRECTO';
             } else {
                 const inicial = match[1];
-                const nombre = match[2].trim();
+                nombre = match[2].trim();
                 const faccion = FACCIONES[inicial];
                 if (!faccion) {
                     mensaje = 'QR INCORRECTO';
@@ -119,15 +120,15 @@ class CodeScanner {
                                     } else {
                                         mensaje = 'Error registrando ingreso local.';
                                     }
-                                    this.showQrPopup(mensaje);
+                                    this.showQrPopup(mensaje, nombre);
                                 })
                                 .catch(err => {
                                     mensaje = 'Error registrando ingreso local.';
-                                    this.showQrPopup(mensaje);
+                                    this.showQrPopup(mensaje, nombre);
                                 });
                             } else {
                                 mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                this.showQrPopup(mensaje);
+                                this.showQrPopup(mensaje, nombre);
                             }
                         } else {
                             // Con internet: registra en Firebase y SQLite
@@ -150,27 +151,30 @@ class CodeScanner {
                                         } else {
                                             mensaje = 'Error registrando ingreso local.';
                                         }
-                                        this.showQrPopup(mensaje);
+                                        this.showQrPopup(mensaje, nombre);
                                     })
                                     .catch(err => {
                                         mensaje = 'Error registrando ingreso local.';
-                                        this.showQrPopup(mensaje);
+                                        this.showQrPopup(mensaje, nombre);
                                     });
                                 } else {
                                     mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    this.showQrPopup(mensaje);
+                                    this.showQrPopup(mensaje, nombre);
                                 }
                             } catch (error) {
                                 mensaje = 'Error consultando ingreso. Intenta de nuevo.';
-                                this.showQrPopup(mensaje);
+                                this.showQrPopup(mensaje, nombre);
                             }
                         }
                     } else {
                         mensaje = 'No estás en la lista';
+                        this.showQrPopup(mensaje, nombre);
                     }
                 }
             }
-            this.showQrPopup(mensaje);
+            if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
+                this.showQrPopup(mensaje, nombre);
+            }
             void this.qrPopup.offsetWidth;
             setTimeout(() => {
                 this.stopScanning();
@@ -183,10 +187,10 @@ class CodeScanner {
         }, 250);
     }
 
-    showQrPopup(value) {
+    showQrPopup(value, nombreParam) {
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
         let faccion = null;
-        let nombre = '';
+        let nombre = nombreParam || '';
         let fac = '';
         let mensaje = value;
         // Detectar facción y nombre si el mensaje es del tipo esperado
@@ -203,9 +207,8 @@ class CodeScanner {
                 fac = match[2].trim();
                 let facClass = faccion ? faccion : '';
                 mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
-            } else if (faccion) {
-                // Usuario nuevo, pero con facción válida
-                // Usar la misma estructura de HTML y clases para consistencia de estilos
+            } else if (faccion && nombre) {
+                // Usuario nuevo, pero con facción válida y nombre definido
                 mensaje = `<span class='bienvenida'>Bienvenido</span><br><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
             }
         }
@@ -394,7 +397,6 @@ if (!cargarDeLocalStorage()) {
             console.log('Base de datos cargada automáticamente y guardada en LocalStorage.');
         });
 }
-//changes
 // Descargar CSV actualizado
 function descargarCSV() {
     let csv = 'Nombre Persona,Facción,Ingreso\n';
