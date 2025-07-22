@@ -202,20 +202,25 @@ class CodeScanner {
                 nombre = match[1].trim();
                 fac = match[2].trim();
                 let facClass = faccion ? faccion : '';
-                mensaje = `<span class='bienvenida'>Bienvenido de vuelta </span><span class='nombre-usuario'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
+                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><br><span class='nombre-usuario'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
             }
         }
         if (faccion) {
             this.qrPopup.classList.add(faccion);
         }
-        // Limpiar el contenido anterior
+        // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
+        const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
+        if (oldVideo) {
+            try { oldVideo.pause(); } catch (e) {}
+            oldVideo.remove();
+        }
         this.qrPopup.innerHTML = '';
         // Construir el HTML del popup
         let videoHTML = '';
         if (faccion) {
             videoHTML = `<video class='bg-video-faccion' src='/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4' autoplay loop muted playsinline tabindex='-1'></video>`;
         }
-        this.qrPopup.innerHTML = videoHTML + `<div class='qr-popup-content'>${mensaje}</div>`;
+        this.qrPopup.innerHTML = videoHTML + `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
@@ -225,7 +230,10 @@ class CodeScanner {
         this.qrPopup.classList.add('hidden');
         // Eliminar cualquier video de fondo si existe (limpieza)
         const v = this.qrPopup.querySelector('video.bg-video-faccion');
-        if (v) v.remove();
+        if (v) {
+            try { v.pause(); } catch (e) {}
+            v.remove();
+        }
         this.qrPopup.innerHTML = '';
         console.log('hideQrPopup ejecutado');
     }

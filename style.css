@@ -146,4 +146,21 @@ body, html {
     background: #000;
     object-fit: cover;
     display: block;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@media (orientation: portrait) {
+  .qr-popup-content {
+    padding-top: 3em;
+  }
 } 
