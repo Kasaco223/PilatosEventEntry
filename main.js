@@ -202,7 +202,7 @@ class CodeScanner {
                 nombre = match[1].trim();
                 fac = match[2].trim();
                 let facClass = faccion ? faccion : '';
-                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><br><span class='nombre-usuario'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
+                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
             }
         }
         if (faccion) {
