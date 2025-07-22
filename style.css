@@ -11,12 +11,21 @@
     font-style: normal;
 }
 
-body, html, * {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE 10+ */
+body, html {
+  background: #000 !important;
 }
-body::-webkit-scrollbar, html::-webkit-scrollbar, *::-webkit-scrollbar {
-  display: none !important;
+
+/* Scrollbars invisibles pero presentes */
+body::-webkit-scrollbar,
+html::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+body, html, * {
+  scrollbar-width: thin; /* Firefox: barra delgada */
+  scrollbar-color: transparent transparent; /* Firefox: invisible */
 }
 
 .qr-popup {
@@ -149,14 +158,6 @@ body::-webkit-scrollbar, html::-webkit-scrollbar, *::-webkit-scrollbar {
     background: #000;
     object-fit: cover;
     display: block;
-}
-
-#qr-reader video {
-  object-fit: cover !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: #000 !important;
-  display: block;
 }
 
 @keyframes fadeIn {
