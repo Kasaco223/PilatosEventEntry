@@ -349,7 +349,7 @@ function descargarCSV() {
 
 // --- Configuración de IP del backend ---
 //192.168.156.20:4321
-const backendIp = "192.168.1.13:4321"; // IP FIJA DEL BACKEND
+const backendIp = "192.168.0.115:4321"; // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }
