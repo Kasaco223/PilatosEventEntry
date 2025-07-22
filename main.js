@@ -39,8 +39,8 @@ class CodeScanner {
             const video = document.createElement('video');
             video.setAttribute('autoplay', 'true');
             video.setAttribute('playsinline', 'true');
-            video.style.width = '100%';
-            video.style.height = '100%';
+            video.style.width = '110%';
+            video.style.height = '110%';
             this.qrReader.appendChild(video);
             video.srcObject = this.stream;
             video.onloadedmetadata = () => {
