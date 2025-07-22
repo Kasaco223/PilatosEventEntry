@@ -102,10 +102,11 @@ class CodeScanner {
                     mensaje = 'QR INCORRECTO';
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+                    let esNuevo = false;
                     if (persona) {
                         if (!navigator.onLine) {
-                            // Sin internet: solo usa la base local (SQLite)
                             if (persona.ingreso !== 'Yes') {
+                                esNuevo = true;
                                 // Registrar ingreso en SQLite
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
@@ -135,6 +136,7 @@ class CodeScanner {
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
+                                    esNuevo = true;
                                     // Firebase
                                     // guardarIngresoEnFirebase(nombre, faccion, 'Yes');
                                     // SQLite
@@ -164,6 +166,13 @@ class CodeScanner {
                                 mensaje = 'Error consultando ingreso. Intenta de nuevo.';
                                 this.showQrPopup(mensaje);
                             }
+                        }
+                        // Unificar formato de mensaje para ambos casos
+                        let facClass = faccion ? faccion.toLowerCase() : '';
+                        if (esNuevo) {
+                            mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                        } else {
+                            mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
                         }
                     } else {
                         mensaje = 'No estás en la lista';
