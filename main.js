@@ -102,24 +102,10 @@ class CodeScanner {
                     mensaje = 'QR INCORRECTO';
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+                    let facClass = faccion ? faccion.toLowerCase() : '';
                     if (persona) {
-                        let esNuevo = false;
-                        let facClass = faccion ? faccion.toLowerCase() : '';
-                        let mostrarPopup = (html) => {
-                            this.showQrPopup(html);
-                            void this.qrPopup.offsetWidth;
-                            setTimeout(() => {
-                                this.stopScanning();
-                                clearTimeout(this.scanTimeout);
-                                this.scanTimeout = setTimeout(() => {
-                                    this.hideQrPopup();
-                                    this.startScanning();
-                                }, 5000);
-                            }, 250);
-                        };
                         if (!navigator.onLine) {
                             if (persona.ingreso !== 'Yes') {
-                                esNuevo = true;
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -127,23 +113,26 @@ class CodeScanner {
                                 })
                                 .then(res => res.json())
                                 .then(data => {
-                                    mostrarPopup(`<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
+                                    if (data.success) {
+                                        mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                    } else {
+                                        mensaje = 'Error registrando ingreso local.';
+                                    }
+                                    this.showQrPopup(mensaje);
                                 })
                                 .catch(err => {
-                                    mostrarPopup('Error registrando ingreso local.');
+                                    mensaje = 'Error registrando ingreso local.';
+                                    this.showQrPopup(mensaje);
                                 });
-                                return;
+                            } else {
+                                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                this.showQrPopup(mensaje);
                             }
-                            // Usuario recurrente offline
-                            mostrarPopup(`<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
-                            return;
                         } else {
-                            // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
-                                    esNuevo = true;
                                     fetch(getBackendUrl('/ingreso'), {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -151,19 +140,24 @@ class CodeScanner {
                                     })
                                     .then(res => res.json())
                                     .then(data => {
-                                        mostrarPopup(`<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
+                                        if (data.success) {
+                                            mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                        } else {
+                                            mensaje = 'Error registrando ingreso local.';
+                                        }
+                                        this.showQrPopup(mensaje);
                                     })
                                     .catch(err => {
-                                        mostrarPopup('Error registrando ingreso local.');
+                                        mensaje = 'Error registrando ingreso local.';
+                                        this.showQrPopup(mensaje);
                                     });
-                                    return;
+                                } else {
+                                    mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
+                                    this.showQrPopup(mensaje);
                                 }
-                                // Usuario recurrente online
-                                mostrarPopup(`<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`);
-                                return;
                             } catch (error) {
-                                mostrarPopup('Error consultando ingreso. Intenta de nuevo.');
-                                return;
+                                mensaje = 'Error consultando ingreso. Intenta de nuevo.';
+                                this.showQrPopup(mensaje);
                             }
                         }
                     } else {
