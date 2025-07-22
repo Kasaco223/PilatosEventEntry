@@ -216,11 +216,17 @@ class CodeScanner {
         }
         this.qrPopup.innerHTML = '';
         // Construir el HTML del popup
-        let videoHTML = '';
-        if (faccion) {
-            videoHTML = `<video class='bg-video-faccion' src='/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4' autoplay loop muted playsinline tabindex='-1'></video>`;
+        if (faccion && faccionVideos[faccion]) {
+            const videoClone = faccionVideos[faccion].cloneNode(true);
+            videoClone.className = 'bg-video-faccion';
+            videoClone.autoplay = true;
+            videoClone.loop = true;
+            videoClone.muted = true;
+            videoClone.playsInline = true;
+            videoClone.style.display = '';
+            this.qrPopup.appendChild(videoClone);
         }
-        this.qrPopup.innerHTML = videoHTML + `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
+        this.qrPopup.innerHTML += `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
@@ -244,12 +250,22 @@ class CodeScanner {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const scanner = new CodeScanner();
-    window.codeScanner = scanner;
-    const video = document.getElementById('effect-video');
-    if (video) {
-        video.load();
-    }
+    preloadVideosSequentially(faccionList, () => {
+        // Oculta el overlay y elimina los videos del DOM (los guardamos en memoria)
+        preloadOverlay.style.display = 'none';
+        faccionList.forEach(f => {
+            if (faccionVideos[f] && faccionVideos[f].parentNode) {
+                faccionVideos[f].parentNode.removeChild(faccionVideos[f]);
+            }
+        });
+        // Ahora sí, inicia el escáner
+        const scanner = new CodeScanner();
+        window.codeScanner = scanner;
+        const video = document.getElementById('effect-video');
+        if (video) {
+            video.load();
+        }
+    });
 });
 
 /**
@@ -286,6 +302,42 @@ const FACCIONES = {
     'T': 'Terra',
     'A': 'Azur'
 };
+
+// Precarga de videos de facción
+const faccionVideos = {};
+const faccionList = Object.values(FACCIONES).map(f => f.toLowerCase());
+const preloadOverlay = document.getElementById('preload-overlay');
+const preloadText = document.getElementById('preload-text');
+
+function preloadVideosSequentially(facciones, onComplete) {
+    let index = 0;
+    function loadNext() {
+        if (index >= facciones.length) {
+            onComplete();
+            return;
+        }
+        const faccion = facciones[index];
+        const video = document.createElement('video');
+        video.src = `/${faccion.charAt(0).toUpperCase() + faccion.slice(1)}.mp4`;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.style.display = 'none';
+        video.addEventListener('canplaythrough', () => {
+            faccionVideos[faccion] = video;
+            index++;
+            loadNext();
+        });
+        video.addEventListener('error', () => {
+            preloadText.textContent = `Error cargando video de ${faccion}`;
+            index++;
+            loadNext();
+        });
+        document.body.appendChild(video);
+        preloadText.textContent = `Cargando ${faccion.charAt(0).toUpperCase() + faccion.slice(1)}...`;
+    }
+    loadNext();
+}
 
 // Base de datos en memoria
 let mogData = [];
@@ -349,7 +401,7 @@ function descargarCSV() {
 
 // --- Configuración de IP del backend ---
 //192.168.156.20:4321
-const backendIp = "192.168.0.115:4321"; // IP FIJA DEL BACKEND
+const backendIp = "192.168.156.20:4321"; // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }

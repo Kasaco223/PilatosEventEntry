@@ -8,6 +8,26 @@
     <!-- Las librerías se importan como módulos ES6 en main.js -->
 </head>
 <body>
+    <div id="preload-overlay" style="
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <span id="preload-text" style="
+        color: #FFF;
+        text-align: center;
+        font-family: 'Glancyr', Arial, sans-serif;
+        font-size: 36px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 118.736%;
+        text-transform: uppercase;
+      ">Cargando . . .</span>
+    </div>
     <div class="container">
         <div class="scanner-container">
             <div class="camera-container">
