@@ -114,20 +114,19 @@ class CodeScanner {
                                 })
                                 .then(res => res.json())
                                 .then(data => {
-                                    if (data.success) {
-                                        mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    } else {
-                                        mensaje = 'Error registrando ingreso local.';
-                                    }
+                                    let facClass = faccion ? faccion.toLowerCase() : '';
+                                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
                                     this.showQrPopup(mensaje);
                                 })
                                 .catch(err => {
                                     mensaje = 'Error registrando ingreso local.';
                                     this.showQrPopup(mensaje);
                                 });
+                                return;
                             } else {
                                 mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                 this.showQrPopup(mensaje);
+                                return;
                             }
                         } else {
                             // Con internet: registra en Firebase y SQLite
@@ -135,9 +134,6 @@ class CodeScanner {
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
-                                    // Firebase
-                                    // guardarIngresoEnFirebase(nombre, faccion, 'Yes');
-                                    // SQLite
                                     fetch(getBackendUrl('/ingreso'), {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -145,24 +141,24 @@ class CodeScanner {
                                     })
                                     .then(res => res.json())
                                     .then(data => {
-                                        if (data.success) {
-                                            mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                        } else {
-                                            mensaje = 'Error registrando ingreso local.';
-                                        }
+                                        let facClass = faccion ? faccion.toLowerCase() : '';
+                                        mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
                                         this.showQrPopup(mensaje);
                                     })
                                     .catch(err => {
                                         mensaje = 'Error registrando ingreso local.';
                                         this.showQrPopup(mensaje);
                                     });
+                                    return;
                                 } else {
                                     mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
                                     this.showQrPopup(mensaje);
+                                    return;
                                 }
                             } catch (error) {
                                 mensaje = 'Error consultando ingreso. Intenta de nuevo.';
                                 this.showQrPopup(mensaje);
+                                return;
                             }
                         }
                     } else {
