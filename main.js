@@ -209,7 +209,7 @@ class CodeScanner {
                 mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
             } else if (faccion && nombre) {
                 // Usuario nuevo, pero con facción válida y nombre definido
-                mensaje = `<span class='bienvenida'>Bienvenido</span><br><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
+                mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
             }
         }
         if (faccion) {
