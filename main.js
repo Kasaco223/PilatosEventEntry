@@ -227,15 +227,19 @@ class CodeScanner {
     }
 
     hideQrPopup() {
-        this.qrPopup.classList.add('hidden');
-        // Eliminar cualquier video de fondo si existe (limpieza)
-        const v = this.qrPopup.querySelector('video.bg-video-faccion');
-        if (v) {
-            try { v.pause(); } catch (e) {}
-            v.remove();
-        }
-        this.qrPopup.innerHTML = '';
-        console.log('hideQrPopup ejecutado');
+        this.qrPopup.classList.add('fade-out');
+        setTimeout(() => {
+            this.qrPopup.classList.add('hidden');
+            // Eliminar cualquier video de fondo si existe (limpieza)
+            const v = this.qrPopup.querySelector('video.bg-video-faccion');
+            if (v) {
+                try { v.pause(); } catch (e) {}
+                v.remove();
+            }
+            this.qrPopup.innerHTML = '';
+            this.qrPopup.classList.remove('fade-out');
+            console.log('hideQrPopup ejecutado');
+        }, 700); // Duración del fade out
     }
 }
 
