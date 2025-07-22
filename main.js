@@ -199,30 +199,24 @@ class CodeScanner {
             else if (value.includes('Prima')) faccion = 'prima';
             else if (value.includes('Terra')) faccion = 'terra';
             else if (value.includes('Azur')) faccion = 'azur';
-            // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
-            const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
+            const match = value.match(/^Bienvenido( de vuelta)? ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
             if (match) {
-                nombre = match[1].trim();
-                fac = match[2].trim();
-                let facClass = faccion ? faccion : '';
-                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
+                nombre = match[2].trim();
+                fac = match[3].trim();
             }
-        }
-        if (faccion) {
-            this.qrPopup.classList.add(faccion);
         }
         // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
         const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
         if (oldVideo) {
             try { oldVideo.pause(); } catch (e) {}
-            oldVideo.remove();
+            oldVideo.style.display = 'none';
+            videoPreloadStore.appendChild(oldVideo);
         }
         this.qrPopup.innerHTML = '';
         // Mover el video precargado al popup si existe y no está ya ahí
-        if (faccion && faccionVideos[faccion]) {
-            const video = faccionVideos[faccion];
+        if (faccion && faccionVideos[faccion.toLowerCase()]) {
+            const video = faccionVideos[faccion.toLowerCase()];
             if (video.parentNode !== this.qrPopup) {
-                // Quitar de su contenedor actual
                 if (video.parentNode) video.parentNode.removeChild(video);
                 video.className = 'bg-video-faccion';
                 video.autoplay = true;
@@ -233,7 +227,8 @@ class CodeScanner {
                 this.qrPopup.appendChild(video);
             }
         }
-        this.qrPopup.innerHTML += `<div class='qr-popup-content fade-in'>${mensaje}</div>`;
+        // Agregar el contenido HTML sin borrar el video
+        this.qrPopup.insertAdjacentHTML('beforeend', `<div class='qr-popup-content fade-in'>${mensaje}</div>`);
         this.qrPopup.classList.remove('hidden');
         void this.qrPopup.offsetWidth;
         console.log('showQrPopup ejecutado');
