@@ -116,7 +116,7 @@ class CodeScanner {
                                 .then(data => {
                                     let facClass = faccion ? faccion.toLowerCase() : '';
                                     mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
-                                    this.showQrPopup(mensaje);
+                                    this.showQrPopup(mensaje, faccion);
                                 })
                                 .catch(err => {
                                     mensaje = 'Error registrando ingreso local.';
@@ -125,7 +125,7 @@ class CodeScanner {
                                 return;
                             } else {
                                 mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                this.showQrPopup(mensaje);
+                                this.showQrPopup(mensaje, faccion);
                                 return;
                             }
                         } else {
@@ -142,7 +142,7 @@ class CodeScanner {
                                     .then(data => {
                                         let facClass = faccion ? faccion.toLowerCase() : '';
                                         mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${persona.nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre'>Tu facción es <span class='faccion-nombre ${facClass}'>${persona.faccion.toUpperCase()}</span></span>`;
-                                        this.showQrPopup(mensaje);
+                                        this.showQrPopup(mensaje, faccion);
                                     })
                                     .catch(err => {
                                         mensaje = 'Error registrando ingreso local.';
@@ -151,7 +151,7 @@ class CodeScanner {
                                     return;
                                 } else {
                                     mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    this.showQrPopup(mensaje);
+                                    this.showQrPopup(mensaje, faccion);
                                     return;
                                 }
                             } catch (error) {
@@ -179,20 +179,19 @@ class CodeScanner {
         }, 250);
     }
 
-    showQrPopup(value) {
+    showQrPopup(value, faccionForzada) {
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
-        let faccion = null;
+        let faccion = faccionForzada || null;
         let nombre = '';
         let fac = '';
         let mensaje = value;
-        // Detectar facción y nombre si el mensaje es del tipo esperado
-        if (typeof value === 'string') {
+        // Detectar facción y nombre si el mensaje es del tipo esperado, solo si no se forzó la facción
+        if (!faccion && typeof value === 'string') {
             if (value.includes('Obscura')) faccion = 'obscura';
             else if (value.includes('Lumen')) faccion = 'lumen';
             else if (value.includes('Prima')) faccion = 'prima';
             else if (value.includes('Terra')) faccion = 'terra';
             else if (value.includes('Azur')) faccion = 'azur';
-            // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
             const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
             if (match) {
                 nombre = match[1].trim();
@@ -215,7 +214,6 @@ class CodeScanner {
         if (faccion && faccionVideos[faccion]) {
             const video = faccionVideos[faccion];
             if (video.parentNode !== this.qrPopup) {
-                // Quitar de su contenedor actual
                 if (video.parentNode) video.parentNode.removeChild(video);
                 video.className = 'bg-video-faccion';
                 video.autoplay = true;
