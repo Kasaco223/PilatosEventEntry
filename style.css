@@ -198,6 +198,11 @@ body, html, * {
   to { opacity: 0; }
 }
 
+.faccion-label-nombre.slide-up-fade-in {
+  opacity: 0;
+  animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
 .nombre-usuario.spaced {
   opacity: 0;
   animation: fadeIn 2.5s forwards;
