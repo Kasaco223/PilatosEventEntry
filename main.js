@@ -94,19 +94,19 @@ class CodeScanner {
             let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
             if (!match) {
                 mensaje = 'QR INCORRECTO';
+                this.showQrPopup(mensaje);
             } else {
                 const inicial = match[1];
                 const nombre = match[2].trim();
                 const faccion = FACCIONES[inicial];
                 if (!faccion) {
                     mensaje = 'QR INCORRECTO';
+                    this.showQrPopup(mensaje);
                 } else {
                     let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
                     if (persona) {
                         if (!navigator.onLine) {
-                            // Sin internet: solo usa la base local (SQLite)
                             if (persona.ingreso !== 'Yes') {
-                                // Registrar ingreso en SQLite
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,6 @@ class CodeScanner {
                                 return;
                             }
                         } else {
-                            // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
@@ -163,10 +162,11 @@ class CodeScanner {
                         }
                     } else {
                         mensaje = 'No estás en la lista';
+                        this.showQrPopup(mensaje);
                     }
                 }
             }
-            this.showQrPopup(mensaje);
+            // Elimina el llamado extra a showQrPopup aquí
             void this.qrPopup.offsetWidth;
             setTimeout(() => {
                 this.stopScanning();
