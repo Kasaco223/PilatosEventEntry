@@ -201,12 +201,16 @@ body, html, * {
 .faccion-label-nombre.slide-up-fade-in {
   opacity: 0;
   animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  display: block;
+  margin-top: 1.2em;
 }
 
 .nombre-usuario.spaced {
   opacity: 0;
   animation: fadeIn 2.5s forwards;
-  display: inline;
+  display: block;
+  margin-top: 0.1em;
+  margin-bottom: 1.2em;
 }
 
 .bg-video-faccion {
