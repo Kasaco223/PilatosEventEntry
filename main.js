@@ -9,290 +9,9 @@ import { BrowserMultiFormatReader } from '@zxing/browser';
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
+import { LectorQR } from './lector.js';
 
-class CodeScanner {
-    constructor() {
-        // Elementos del DOM
-        this.qrReader = document.getElementById('qr-reader');
-        this.qrPopup = document.getElementById('qr-popup');
-        // Estado
-        this.isScanning = false;
-        this.codeReader = new BrowserMultiFormatReader();
-        this.lastResult = '';
-        this.lastResultTimestamp = 0; // Nuevo: marca de tiempo del último QR
-        this.scanSessionId = 0; // Nuevo: identificador de sesión de escaneo
-        this.scanTimeout = null;
-        this.stream = null;
-        this.videoInputDeviceId = undefined;
-        this.scanLoop = null;
-        this.videoElement = null; // Nuevo: referencia persistente al video
-        this.startScanning();
-    }
-
-    async startScanning() {
-        if (this.isScanning) return;
-        this.isScanning = true;
-        this.scanSessionId = Date.now(); // Nueva sesión
-        if (!this.stream) {
-            // Obtener acceso a la cámara solo una vez
-            const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
-            this.videoInputDeviceId = videoInputDevices[0]?.deviceId;
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: this.videoInputDeviceId } });
-        }
-        if (!this.videoElement) {
-            this.videoElement = document.createElement('video');
-            this.videoElement.setAttribute('autoplay', 'true');
-            this.videoElement.setAttribute('playsinline', 'true');
-            this.videoElement.style.width = '100%';
-            this.videoElement.style.height = '100%';
-            this.qrReader.appendChild(this.videoElement);
-            this.videoElement.srcObject = this.stream;
-        }
-        this.videoElement.style.display = '';
-        this.videoElement.onloadedmetadata = () => {
-            this.videoElement.play();
-            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
-        };
-        // Si ya está cargado, iniciar el loop directamente
-        if (this.videoElement.readyState >= 2) {
-            this.videoElement.play();
-            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
-        }
-    }
-
-    async scanFrame(video) {
-        if (!this.isScanning) return;
-        const currentSession = this.scanSessionId;
-        try {
-            const result = await this.codeReader.decodeOnceFromVideoElement(video);
-            if (this.scanSessionId !== currentSession) return; // Si la sesión cambió, descartar resultado
-            if (result && result.text) {
-                if (result.text !== this.lastResult) {
-                    this.lastResult = result.text;
-                    this.lastResultTimestamp = Date.now();
-                    this.handleScanResult(result.text);
-                    return;
-                }
-                // Si es el mismo QR, no hacer nada y seguir esperando uno diferente
-            }
-        } catch (e) {
-            // No se detectó código, continuar
-        }
-        this.scanLoop = requestAnimationFrame(() => this.scanFrame(video));
-    }
-
-    pauseScanning() {
-        this.isScanning = false;
-        if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
-        if (this.videoElement) {
-            this.videoElement.pause();
-            this.videoElement.style.display = 'none';
-        }
-    }
-
-    resumeScanning() {
-        if (this.isScanning) return;
-        this.isScanning = true;
-        this.scanSessionId = Date.now(); // Nueva sesión al reanudar
-        if (this.videoElement) {
-            this.videoElement.style.display = '';
-            this.videoElement.play();
-            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
-        }
-    }
-
-    async stopScanning() {
-        this.isScanning = false;
-        if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
-        if (this.videoElement) {
-            this.videoElement.pause();
-            this.videoElement.style.display = 'none';
-        }
-        // No destruimos el stream ni el videoElement
-        this.lastResult = '';
-    }
-
-    async handleScanResult(value) {
-        this.pauseScanning(); // Pausar escaneo inmediatamente
-        this.isScanning = false;
-        if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
-        setTimeout(async () => {
-            let mensaje = '';
-            let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
-            let nombre = '';
-            if (!match) {
-                mensaje = 'QR INCORRECTO';
-            } else {
-                const inicial = match[1];
-                nombre = match[2].trim();
-                const faccion = FACCIONES[inicial];
-                if (!faccion) {
-                    mensaje = 'QR INCORRECTO';
-                } else {
-                    let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
-                    if (persona) {
-                        if (!navigator.onLine) {
-                            // Sin internet: solo usa la base local (SQLite)
-                            if (persona.ingreso !== 'Yes') {
-                                fetch(getBackendUrl('/ingreso'), {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ nombre })
-                                })
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    } else {
-                                        mensaje = 'Error registrando ingreso local.';
-                                    }
-                                    this.showQrPopup(mensaje, nombre);
-                                })
-                                .catch(err => {
-                                    mensaje = 'Error registrando ingreso local.';
-                                    this.showQrPopup(mensaje, nombre);
-                                });
-                            } else {
-                                mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                this.showQrPopup(mensaje, nombre);
-                            }
-                        } else {
-                            const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
-                            try {
-                                const snapshot = await get(dbRef);
-                                if (!snapshot.exists()) {
-                                    fetch(getBackendUrl('/ingreso'), {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ nombre })
-                                    })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                        } else {
-                                            mensaje = 'Error registrando ingreso local.';
-                                        }
-                                        this.showQrPopup(mensaje, nombre);
-                                    })
-                                    .catch(err => {
-                                        mensaje = 'Error registrando ingreso local.';
-                                        this.showQrPopup(mensaje, nombre);
-                                    });
-                                } else {
-                                    mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                    this.showQrPopup(mensaje, nombre);
-                                }
-                            } catch (error) {
-                                mensaje = 'Error consultando ingreso. Intenta de nuevo.';
-                                this.showQrPopup(mensaje, nombre);
-                            }
-                        }
-                    } else {
-                        mensaje = 'No estás en la lista';
-                        this.showQrPopup(mensaje, nombre);
-                    }
-                }
-            }
-            if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
-                this.showQrPopup(mensaje, nombre);
-            }
-            void this.qrPopup.offsetWidth;
-            setTimeout(() => {
-                // En vez de stopScanning, solo pausar
-                this.pauseScanning();
-                clearTimeout(this.scanTimeout);
-                this.scanTimeout = setTimeout(() => {
-                    this.hideQrPopup();
-                    // En vez de startScanning, solo reanudar
-                    this.resumeScanning();
-                }, 5000);
-            }, 250);
-        }, 250);
-    }
-
-    showQrPopup(value, nombreParam) {
-        this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
-        let faccion = null;
-        let nombre = nombreParam || '';
-        let fac = '';
-        let mensaje = value;
-        // Detectar facción y nombre si el mensaje es del tipo esperado
-        if (typeof value === 'string') {
-            if (value.includes('Obscura')) faccion = 'obscura';
-            else if (value.includes('Lumen')) faccion = 'lumen';
-            else if (value.includes('Prima')) faccion = 'prima';
-            else if (value.includes('Terra')) faccion = 'terra';
-            else if (value.includes('Azur')) faccion = 'azur';
-            // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
-            const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
-            if (match) {
-                nombre = match[1].trim();
-                fac = match[2].trim();
-                let facClass = faccion ? faccion : '';
-                mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
-            } else if (faccion && nombre) {
-                // Usuario nuevo, pero con facción válida y nombre definido
-                mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
-            }
-        }
-        // Incrementar el contador solo si es un mensaje de bienvenida
-        if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
-            incrementarQrCounter();
-        }
-        if (faccion) {
-            this.qrPopup.classList.add(faccion);
-        }
-        // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
-        const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
-        if (oldVideo) {
-            try { oldVideo.pause(); } catch (e) {}
-            oldVideo.remove();
-        }
-        this.qrPopup.innerHTML = '';
-        // Mover el video precargado al popup si existe y no está ya ahí
-        if (faccion && faccionVideos[faccion]) {
-            const video = faccionVideos[faccion];
-            if (video.parentNode !== this.qrPopup) {
-                if (video.parentNode) video.parentNode.removeChild(video);
-                video.className = 'bg-video-faccion';
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = true;
-                video.playsInline = true;
-                video.style.display = '';
-                video.currentTime = 0;
-                this.qrPopup.appendChild(video);
-                video.play();
-            }
-        }
-        // Crear el bloque de texto del popup de forma segura
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'qr-popup-content fade-in';
-        contentDiv.innerHTML = mensaje;
-        this.qrPopup.appendChild(contentDiv);
-        this.qrPopup.classList.remove('hidden');
-        void this.qrPopup.offsetWidth;
-        console.log('showQrPopup ejecutado');
-    }
-
-    hideQrPopup() {
-        this.qrPopup.classList.add('fade-out');
-        setTimeout(() => {
-        this.qrPopup.classList.add('hidden');
-            // Mover cualquier video de fondo de vuelta al store oculto
-        const v = this.qrPopup.querySelector('video.bg-video-faccion');
-            if (v) {
-                v.pause();
-                v.style.display = 'none';
-                videoPreloadStore.appendChild(v);
-            }
-        this.qrPopup.innerHTML = '';
-            this.qrPopup.classList.remove('fade-out');
-        console.log('hideQrPopup ejecutado');
-        }, 700); // Duración del fade out
-    }
-}
+// Eliminar la clase CodeScanner y toda la lógica de escaneo QR
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarQrCounter();
@@ -305,8 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         // Ahora sí, inicia el escáner
-    const scanner = new CodeScanner();
-    window.codeScanner = scanner;
+        // Crear instancia del lector y pasarle el callback para procesar el QR
+        const lector = new LectorQR({
+            onDetect: (qrText) => {
+                handleScanResult(qrText); // Usa tu función actual para procesar el QR
+            },
+            cooldown: 5000 // ms de espera tras cada QR detectado
+        });
+        lector.start();
     const video = document.getElementById('effect-video');
     if (video) {
         video.load();
@@ -446,7 +171,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter_V7';
+const QR_COUNTER_KEY = 'qr_counter_V8';
 let qrCounter = 0;
 
 function cargarQrCounter() {
@@ -472,8 +197,12 @@ function actualizarQrCounterUI() {
 }
 
 // --- Configuración de IP del backend ---
-//192.168.156.20:4321
-const backendIp = "192.168.156.20:4321"; // IP FIJA DEL BACKEND
+//192.168.156.20:4321 TpLink Ras
+//192.168.156.20:4321 celular Ras
+//192.168.1.2:4321 Casa Pc
+
+const backendIp = "192.168.156.20:4321";
+ // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
 }
@@ -502,4 +231,222 @@ function guardarIngresoEnFirebase(nombre, faccion, ingreso) {
         ingreso: ingreso,
         hora: horaColombia.toISOString().replace('T', ' ').substring(0, 19)
     });
+} 
+
+// --- Procesamiento de QR detectado ---
+async function handleScanResult(value) {
+    // Evitar escaneo repetido en menos de 10 segundos
+    if (handleScanResult.lastQrText === value && (Date.now() - handleScanResult.lastQrTime < 10000)) {
+        const elapsed = Date.now() - handleScanResult.lastQrTime;
+        console.log(`Intento de escanear repetido: '${value}', tiempo transcurrido: ${elapsed} ms, lastQrText: '${handleScanResult.lastQrText}'`);
+        return;
+    }
+    handleScanResult.lastQrText = value;
+    handleScanResult.lastQrTime = Date.now();
+    console.log('Nuevo QR procesado:', value, 'Hora:', handleScanResult.lastQrTime);
+    // --- Aquí va la lógica de procesamiento, popup, contador, etc. ---
+    let mensaje = '';
+    let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
+    let nombre = '';
+    if (!match) {
+        mensaje = 'QR INCORRECTO';
+    } else {
+        const inicial = match[1];
+        nombre = match[2].trim();
+        const faccion = FACCIONES[inicial];
+        if (!faccion) {
+            mensaje = 'QR INCORRECTO';
+        } else {
+            let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+            if (persona) {
+                if (!navigator.onLine) {
+                    if (persona.ingreso !== 'Yes') {
+                        fetch(getBackendUrl('/ingreso'), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nombre })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                            } else {
+                                mensaje = 'Error registrando ingreso local.';
+                            }
+                            showQrPopup(mensaje, nombre);
+                        })
+                        .catch(err => {
+                            mensaje = 'Error registrando ingreso local.';
+                            showQrPopup(mensaje, nombre);
+                        });
+                    } else {
+                        mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                        showQrPopup(mensaje, nombre);
+                    }
+                } else {
+                    const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
+                    try {
+                        const snapshot = await get(dbRef);
+                        if (!snapshot.exists()) {
+                            fetch(getBackendUrl('/ingreso'), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ nombre })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                                } else {
+                                    mensaje = 'Error registrando ingreso local.';
+                                }
+                                showQrPopup(mensaje, nombre);
+                            })
+                            .catch(err => {
+                                mensaje = 'Error registrando ingreso local.';
+                                showQrPopup(mensaje, nombre);
+                            });
+                        } else {
+                            mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                            showQrPopup(mensaje, nombre);
+                        }
+                    } catch (error) {
+                        mensaje = 'Error consultando ingreso. Intenta de nuevo.';
+                        showQrPopup(mensaje, nombre);
+                    }
+                }
+            } else {
+                mensaje = 'No estás en la lista';
+                showQrPopup(mensaje, nombre);
+            }
+        }
+    }
+    if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
+        showQrPopup(mensaje, nombre);
+    }
+}
+handleScanResult.lastQrText = '';
+handleScanResult.lastQrTime = 0; 
+
+// Crear el mensaje de escaneo si no existe
+function mostrarMensajeEscaneo() {
+    let msg = document.getElementById('mensaje-escaneo');
+    if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'mensaje-escaneo';
+        msg.innerHTML = 'Escanea tu QR<br/>descubre tu facción';
+        document.body.appendChild(msg);
+    }
+    msg.style.display = '';
+}
+function ocultarMensajeEscaneo() {
+    let msg = document.getElementById('mensaje-escaneo');
+    if (msg) msg.style.display = 'none';
+}
+// Mostrar mensaje al inicio
+mostrarMensajeEscaneo();
+
+function showQrPopup(value, nombreParam) {
+    ocultarMensajeEscaneo();
+    const qrPopup = document.getElementById('qr-popup');
+    qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
+    let faccion = null;
+    let nombre = nombreParam || '';
+    let fac = '';
+    let mensaje = value;
+    // Detectar facción y nombre si el mensaje es del tipo esperado
+    if (typeof value === 'string') {
+        if (value.includes('Obscura')) faccion = 'obscura';
+        else if (value.includes('Lumen')) faccion = 'lumen';
+        else if (value.includes('Prima')) faccion = 'prima';
+        else if (value.includes('Terra')) faccion = 'terra';
+        else if (value.includes('Azur')) faccion = 'azur';
+        // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
+        const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
+        if (match) {
+            nombre = match[1].trim();
+            fac = match[2].trim();
+            let facClass = faccion ? faccion : '';
+            mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
+        } else if (faccion && nombre) {
+            // Usuario nuevo, pero con facción válida y nombre definido
+            mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
+        }
+    }
+    // Incrementar el contador solo si es un mensaje de bienvenida
+    if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
+        incrementarQrCounter();
+    }
+    if (faccion) {
+        qrPopup.classList.add(faccion);
+    }
+    // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
+    const oldVideo = qrPopup.querySelector('video.bg-video-faccion');
+    if (oldVideo) {
+        try { oldVideo.pause(); } catch (e) {}
+        oldVideo.remove();
+    }
+    qrPopup.innerHTML = '';
+    // Mover el video precargado al popup si existe y no está ya ahí
+    if (faccion && faccionVideos[faccion]) {
+        const video = faccionVideos[faccion];
+        console.log('[Popup] Preparando video de facción:', faccion, 'readyState:', video.readyState, 'display:', video.style.display, 'parent:', video.parentNode === qrPopup);
+        if (video.parentNode !== qrPopup) {
+            if (video.parentNode) video.parentNode.removeChild(video);
+            video.className = 'bg-video-faccion';
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.style.display = '';
+            qrPopup.appendChild(video);
+            console.log('[Popup] Video de facción movido al popup.');
+        }
+        // Intentar reproducir el video de facción de forma simple primero
+        try {
+            console.log('[Popup] Intentando reproducir video de facción...');
+            video.play().then(() => {
+                console.log('[Popup] Video de facción está reproduciéndose.');
+            }).catch(e => {
+                console.warn('[Popup] No se pudo reproducir el video de facción:', e);
+            });
+        } catch (e) {
+            console.warn('[Popup] Error al intentar reproducir el video de facción:', e);
+        }
+        // Log extra tras un pequeño delay para ver si el video está visible
+        setTimeout(() => {
+            console.log('[Popup] Estado tras 500ms: readyState:', video.readyState, 'paused:', video.paused, 'currentTime:', video.currentTime, 'display:', video.style.display, 'parent:', video.parentNode === qrPopup);
+        }, 500);
+    }
+    // Crear el bloque de texto del popup de forma segura
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'qr-popup-content fade-in';
+    contentDiv.innerHTML = mensaje;
+    qrPopup.appendChild(contentDiv);
+    qrPopup.classList.remove('hidden');
+    void qrPopup.offsetWidth;
+    console.log('showQrPopup ejecutado');
+    // Ocultar el popup después de un tiempo y limpiar
+    setTimeout(() => {
+        hideQrPopup();
+    }, 5000);
+}
+
+function hideQrPopup() {
+    const qrPopup = document.getElementById('qr-popup');
+    qrPopup.classList.add('fade-out');
+    setTimeout(() => {
+        qrPopup.classList.add('hidden');
+        // Mover cualquier video de fondo de vuelta al store oculto
+        const v = qrPopup.querySelector('video.bg-video-faccion');
+        if (v) {
+            v.pause();
+            v.style.display = 'none';
+            videoPreloadStore.appendChild(v);
+        }
+        qrPopup.innerHTML = '';
+        qrPopup.classList.remove('fade-out');
+        mostrarMensajeEscaneo();
+        console.log('hideQrPopup ejecutado');
+    }, 700);
 } 

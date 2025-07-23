@@ -163,7 +163,7 @@ body, html, * {
 
 #qr-counter {
     position: fixed;
-    top: 50%;
+    top: 30%; /* Antes: 50% */
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 9999;
@@ -178,6 +178,27 @@ body, html, * {
     border-radius: 1vw;
     padding: 1vw 2vw;
     box-shadow: 0 0 30px #0008;
+}
+
+#mensaje-escaneo {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9000;
+    color: #FFF;
+    text-align: center;
+    font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 118.736%;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.95;
+    text-shadow: 0 0 12px #0008;
 }
 
 @keyframes fadeIn {
