@@ -188,6 +188,10 @@ class CodeScanner {
     }
 
     showQrPopup(value, nombreParam) {
+        // Detener escaneo mientras se muestra el popup
+        if (this.isScanning) {
+            this.stopScanning();
+        }
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
         let faccion = null;
         let nombre = nombreParam || '';
@@ -280,6 +284,10 @@ class CodeScanner {
                 this.scanLoop = null;
             }
             console.log('hideQrPopup ejecutado');
+            // Reanudar escaneo después de ocultar el popup
+            if (typeof this.startScanning === 'function') {
+                this.startScanning();
+            }
         }, 700); // Duración del fade out
     }
 }
@@ -350,7 +358,15 @@ function preloadVideosSequentially(facciones, onComplete) {
     let index = 0;
     function loadNext() {
         if (index >= facciones.length) {
-            onComplete();
+            // Si la última facción es Azur, esperar un poco más antes de continuar
+            if (facciones[index-1] === 'azur') {
+                preloadText.textContent = 'Azur listo. Esperando...';
+                setTimeout(() => {
+                    onComplete();
+                }, 1200); // Espera adicional de 1.2 segundos
+            } else {
+                onComplete();
+            }
             return;
         }
         const faccion = facciones[index];
@@ -436,7 +452,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter_v2';
+const QR_COUNTER_KEY = 'qr_counter_v3';
 let qrCounter = 0;
 
 function cargarQrCounter() {
