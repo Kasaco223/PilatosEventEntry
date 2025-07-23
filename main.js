@@ -19,6 +19,8 @@ class CodeScanner {
         this.isScanning = false;
         this.codeReader = new BrowserMultiFormatReader();
         this.lastResult = '';
+        this.lastResultTimestamp = 0; // Nuevo: marca de tiempo del último QR
+        this.scanSessionId = 0; // Nuevo: identificador de sesión de escaneo
         this.scanTimeout = null;
         this.stream = null;
         this.videoInputDeviceId = undefined;
@@ -30,6 +32,7 @@ class CodeScanner {
     async startScanning() {
         if (this.isScanning) return;
         this.isScanning = true;
+        this.scanSessionId = Date.now(); // Nueva sesión
         if (!this.stream) {
             // Obtener acceso a la cámara solo una vez
             const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
@@ -59,11 +62,21 @@ class CodeScanner {
 
     async scanFrame(video) {
         if (!this.isScanning) return;
+        const currentSession = this.scanSessionId;
         try {
             const result = await this.codeReader.decodeOnceFromVideoElement(video);
+            if (this.scanSessionId !== currentSession) return; // Si la sesión cambió, descartar resultado
             if (result && result.text) {
-                this.handleScanResult(result.text);
-                return;
+                const now = Date.now();
+                if (
+                    result.text !== this.lastResult ||
+                    (now - this.lastResultTimestamp) > 3000
+                ) {
+                    this.lastResult = result.text;
+                    this.lastResultTimestamp = now;
+                    this.handleScanResult(result.text);
+                    return;
+                }
             }
         } catch (e) {
             // No se detectó código, continuar
@@ -83,6 +96,7 @@ class CodeScanner {
     resumeScanning() {
         if (this.isScanning) return;
         this.isScanning = true;
+        this.scanSessionId = Date.now(); // Nueva sesión al reanudar
         if (this.videoElement) {
             this.videoElement.style.display = '';
             this.videoElement.play();
@@ -249,7 +263,9 @@ class CodeScanner {
                 video.muted = true;
                 video.playsInline = true;
                 video.style.display = '';
+                video.currentTime = 0;
                 this.qrPopup.appendChild(video);
+                video.play();
             }
         }
         // Crear el bloque de texto del popup de forma segura
