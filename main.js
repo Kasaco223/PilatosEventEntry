@@ -175,6 +175,9 @@ class CodeScanner {
             if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
                 this.showQrPopup(mensaje, nombre);
             }
+            if (mensaje && mensaje.startsWith('Bienvenido')) {
+                incrementarQrCounter();
+            }
             void this.qrPopup.offsetWidth;
             setTimeout(() => {
                 this.stopScanning();
@@ -249,22 +252,23 @@ class CodeScanner {
     hideQrPopup() {
         this.qrPopup.classList.add('fade-out');
         setTimeout(() => {
-            this.qrPopup.classList.add('hidden');
+        this.qrPopup.classList.add('hidden');
             // Mover cualquier video de fondo de vuelta al store oculto
-            const v = this.qrPopup.querySelector('video.bg-video-faccion');
+        const v = this.qrPopup.querySelector('video.bg-video-faccion');
             if (v) {
                 v.pause();
                 v.style.display = 'none';
                 videoPreloadStore.appendChild(v);
             }
-            this.qrPopup.innerHTML = '';
+        this.qrPopup.innerHTML = '';
             this.qrPopup.classList.remove('fade-out');
-            console.log('hideQrPopup ejecutado');
+        console.log('hideQrPopup ejecutado');
         }, 700); // Duración del fade out
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    cargarQrCounter();
     preloadVideosSequentially(faccionList, () => {
         // Oculta el overlay y elimina los videos del DOM (los guardamos en memoria)
         preloadOverlay.style.display = 'none';
@@ -274,12 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         // Ahora sí, inicia el escáner
-        const scanner = new CodeScanner();
-        window.codeScanner = scanner;
-        const video = document.getElementById('effect-video');
-        if (video) {
-            video.load();
-        }
+    const scanner = new CodeScanner();
+    window.codeScanner = scanner;
+    const video = document.getElementById('effect-video');
+    if (video) {
+        video.load();
+    }
     });
 });
 
@@ -412,6 +416,32 @@ function descargarCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// --- Contador de QR escaneados ---
+const QR_COUNTER_KEY = 'qr_counter';
+let qrCounter = 0;
+
+function cargarQrCounter() {
+    const val = localStorage.getItem(QR_COUNTER_KEY);
+    qrCounter = val ? parseInt(val, 10) : 0;
+    actualizarQrCounterUI();
+}
+
+function incrementarQrCounter() {
+    qrCounter++;
+    localStorage.setItem(QR_COUNTER_KEY, qrCounter);
+    actualizarQrCounterUI();
+}
+
+function actualizarQrCounterUI() {
+    let counterDiv = document.getElementById('qr-counter');
+    if (!counterDiv) {
+        counterDiv = document.createElement('div');
+        counterDiv.id = 'qr-counter';
+        document.body.appendChild(counterDiv);
+    }
+    counterDiv.textContent = qrCounter;
 }
 
 // --- Configuración de IP del backend ---

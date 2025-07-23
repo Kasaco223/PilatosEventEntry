@@ -161,6 +161,25 @@ body, html, * {
     display: block;
 }
 
+#qr-counter {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    font-size: 7vw;
+    font-family: 'Glancyr-Medium', Arial, sans-serif;
+    color: #fff;
+    text-shadow: 0 0 20px #000, 0 0 40px #000;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.92;
+    background: rgba(0,0,0,0.18);
+    border-radius: 1vw;
+    padding: 1vw 2vw;
+    box-shadow: 0 0 30px #0008;
+}
+
 @keyframes fadeIn {
   to {
     opacity: 1;
