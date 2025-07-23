@@ -61,8 +61,7 @@ class CodeScanner {
         if (!this.isScanning) return;
         try {
             const result = await this.codeReader.decodeOnceFromVideoElement(video);
-            if (result && result.text !== this.lastResult) {
-                this.lastResult = result.text;
+            if (result && result.text) {
                 this.handleScanResult(result.text);
                 return;
             }
@@ -433,7 +432,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter_V6';
+const QR_COUNTER_KEY = 'qr_counter_V7';
 let qrCounter = 0;
 
 function cargarQrCounter() {
