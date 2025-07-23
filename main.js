@@ -67,16 +67,13 @@ class CodeScanner {
             const result = await this.codeReader.decodeOnceFromVideoElement(video);
             if (this.scanSessionId !== currentSession) return; // Si la sesión cambió, descartar resultado
             if (result && result.text) {
-                const now = Date.now();
-                if (
-                    result.text !== this.lastResult ||
-                    (now - this.lastResultTimestamp) > 3000
-                ) {
+                if (result.text !== this.lastResult) {
                     this.lastResult = result.text;
-                    this.lastResultTimestamp = now;
+                    this.lastResultTimestamp = Date.now();
                     this.handleScanResult(result.text);
                     return;
                 }
+                // Si es el mismo QR, no hacer nada y seguir esperando uno diferente
             }
         } catch (e) {
             // No se detectó código, continuar
