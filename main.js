@@ -23,11 +23,12 @@ class CodeScanner {
         this.stream = null;
         this.videoInputDeviceId = undefined;
         this.scanLoop = null;
+        this.isPopupActive = false;
         this.startScanning();
     }
 
     async startScanning() {
-        if (this.isScanning) return;
+        if (this.isScanning || this.isPopupActive) return;
         this.isScanning = true;
         console.log('Solicitando acceso a la cámara por primera vez...');
         try {
@@ -54,12 +55,16 @@ class CodeScanner {
     }
 
     async scanFrame(video) {
-        if (!this.isScanning) return;
+        if (!this.isScanning || this.isPopupActive) return;
         try {
             const result = await this.codeReader.decodeOnceFromVideoElement(video);
             if (result && result.text !== this.lastResult) {
                 this.lastResult = result.text;
-                this.handleScanResult(result.text);
+                // Detener escaneo y mostrar popup solo si no hay uno activo
+                this.isScanning = false;
+                if (!this.isPopupActive) {
+                    this.handleScanResult(result.text);
+                }
                 return;
             }
         } catch (e) {
@@ -88,6 +93,7 @@ class CodeScanner {
 
     async handleScanResult(value) {
         this.isScanning = false;
+        this.isPopupActive = true;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
         setTimeout(async () => {
             let mensaje = '';
@@ -181,13 +187,16 @@ class CodeScanner {
                 clearTimeout(this.scanTimeout);
                 this.scanTimeout = setTimeout(() => {
                     this.hideQrPopup();
-                    this.startScanning();
+                    // this.startScanning(); // Ya no reiniciamos aquí, sino en hideQrPopup
                 }, 5000);
             }, 250);
         }, 250);
     }
 
     showQrPopup(value, nombreParam) {
+        // No mostrar popup si ya hay uno activo
+        if (this.isPopupActive) return;
+        this.isPopupActive = true;
         // Detener escaneo mientras se muestra el popup
         if (this.isScanning) {
             this.stopScanning();
@@ -283,11 +292,12 @@ class CodeScanner {
                 cancelAnimationFrame(this.scanLoop);
                 this.scanLoop = null;
             }
-            console.log('hideQrPopup ejecutado');
+            this.isPopupActive = false;
             // Reanudar escaneo después de ocultar el popup
             if (typeof this.startScanning === 'function') {
                 this.startScanning();
             }
+            console.log('hideQrPopup ejecutado');
         }, 700); // Duración del fade out
     }
 }
@@ -452,7 +462,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter_v3';
+const QR_COUNTER_KEY = 'qr_counter_v4';
 let qrCounter = 0;
 
 function cargarQrCounter() {
