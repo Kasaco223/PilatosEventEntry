@@ -175,9 +175,6 @@ class CodeScanner {
             if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
                 this.showQrPopup(mensaje, nombre);
             }
-            if (mensaje && mensaje.trim().toLowerCase().startsWith('bienvenido')) {
-                incrementarQrCounter();
-            }
             void this.qrPopup.offsetWidth;
             setTimeout(() => {
                 this.stopScanning();
@@ -214,6 +211,10 @@ class CodeScanner {
                 // Usuario nuevo, pero con facción válida y nombre definido
                 mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
             }
+        }
+        // Incrementar el contador solo si es un mensaje de bienvenida
+        if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
+            incrementarQrCounter();
         }
         if (faccion) {
             this.qrPopup.classList.add(faccion);
