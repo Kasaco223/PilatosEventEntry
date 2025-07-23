@@ -93,7 +93,6 @@ class CodeScanner {
 
     async handleScanResult(value) {
         this.isScanning = false;
-        this.isPopupActive = true;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
         setTimeout(async () => {
             let mensaje = '';
