@@ -216,20 +216,20 @@ class CodeScanner {
         if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
             incrementarQrCounter();
         }
-        if (faccion) {
-            this.qrPopup.classList.add(faccion);
-        }
         // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
         const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
         if (oldVideo) {
-            try { oldVideo.pause(); } catch (e) {}
-            oldVideo.remove();
+            try { oldVideo.pause(); oldVideo.srcObject = null; } catch (e) {}
+            if (oldVideo.parentNode) oldVideo.parentNode.removeChild(oldVideo);
         }
         this.qrPopup.innerHTML = '';
         // Mover el video precargado al popup si existe y no está ya ahí
         if (faccion && faccionVideos[faccion]) {
             const video = faccionVideos[faccion];
+            // Solo agregar si no está ya en el popup
             if (video.parentNode !== this.qrPopup) {
+                // Pausar y limpiar de su padre anterior
+                try { video.pause(); video.srcObject = null; } catch (e) {}
                 if (video.parentNode) video.parentNode.removeChild(video);
                 video.className = 'bg-video-faccion';
                 video.autoplay = true;
@@ -238,6 +238,9 @@ class CodeScanner {
                 video.playsInline = true;
                 video.style.display = '';
                 this.qrPopup.appendChild(video);
+                // Forzar recarga para liberar recursos
+                video.load();
+                setTimeout(() => { video.play(); }, 100);
             }
         }
         // Crear el bloque de texto del popup de forma segura
@@ -253,17 +256,30 @@ class CodeScanner {
     hideQrPopup() {
         this.qrPopup.classList.add('fade-out');
         setTimeout(() => {
-        this.qrPopup.classList.add('hidden');
+            this.qrPopup.classList.add('hidden');
             // Mover cualquier video de fondo de vuelta al store oculto
-        const v = this.qrPopup.querySelector('video.bg-video-faccion');
+            const v = this.qrPopup.querySelector('video.bg-video-faccion');
             if (v) {
-                v.pause();
+                try { v.pause(); v.srcObject = null; } catch (e) {}
                 v.style.display = 'none';
-                videoPreloadStore.appendChild(v);
+                if (videoPreloadStore && videoPreloadStore.appendChild) {
+                    videoPreloadStore.appendChild(v);
+                } else if (v.parentNode) {
+                    v.parentNode.removeChild(v);
+                }
             }
-        this.qrPopup.innerHTML = '';
+            this.qrPopup.innerHTML = '';
             this.qrPopup.classList.remove('fade-out');
-        console.log('hideQrPopup ejecutado');
+            // Limpiar timeouts y animaciones
+            if (this.scanTimeout) {
+                clearTimeout(this.scanTimeout);
+                this.scanTimeout = null;
+            }
+            if (this.scanLoop) {
+                cancelAnimationFrame(this.scanLoop);
+                this.scanLoop = null;
+            }
+            console.log('hideQrPopup ejecutado');
         }, 700); // Duración del fade out
     }
 }
@@ -420,7 +436,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter';
+const QR_COUNTER_KEY = 'qr_counter_v2';
 let qrCounter = 0;
 
 function cargarQrCounter() {
