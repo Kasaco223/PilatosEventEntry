@@ -116,6 +116,7 @@ class CodeScanner {
     }
 
     async handleScanResult(value) {
+        this.pauseScanning(); // Pausar escaneo inmediatamente
         this.isScanning = false;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
         setTimeout(async () => {
