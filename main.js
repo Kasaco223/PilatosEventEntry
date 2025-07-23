@@ -23,48 +23,47 @@ class CodeScanner {
         this.stream = null;
         this.videoInputDeviceId = undefined;
         this.scanLoop = null;
-        this.isPopupActive = false;
+        this.videoElement = null; // Nuevo: referencia persistente al video
         this.startScanning();
     }
 
     async startScanning() {
-        if (this.isScanning || this.isPopupActive) return;
+        if (this.isScanning) return;
         this.isScanning = true;
-        console.log('Solicitando acceso a la cámara por primera vez...');
-        try {
-            // Obtener acceso a la cámara
+        if (!this.stream) {
+            // Obtener acceso a la cámara solo una vez
             const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
             this.videoInputDeviceId = videoInputDevices[0]?.deviceId;
             this.stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: this.videoInputDeviceId } });
-            this.qrReader.innerHTML = '';
-            const video = document.createElement('video');
-            video.setAttribute('autoplay', 'true');
-            video.setAttribute('playsinline', 'true');
-            video.style.width = '100%';
-            video.style.height = '100%';
-            this.qrReader.appendChild(video);
-            video.srcObject = this.stream;
-            video.onloadedmetadata = () => {
-                video.play();
-                this.scanLoop = requestAnimationFrame(() => this.scanFrame(video));
-            };
-        } catch (error) {
-            this.isScanning = false;
-            setTimeout(() => this.startScanning(), 2000);
+        }
+        if (!this.videoElement) {
+            this.videoElement = document.createElement('video');
+            this.videoElement.setAttribute('autoplay', 'true');
+            this.videoElement.setAttribute('playsinline', 'true');
+            this.videoElement.style.width = '100%';
+            this.videoElement.style.height = '100%';
+            this.qrReader.appendChild(this.videoElement);
+            this.videoElement.srcObject = this.stream;
+        }
+        this.videoElement.style.display = '';
+        this.videoElement.onloadedmetadata = () => {
+            this.videoElement.play();
+            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
+        };
+        // Si ya está cargado, iniciar el loop directamente
+        if (this.videoElement.readyState >= 2) {
+            this.videoElement.play();
+            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
         }
     }
 
     async scanFrame(video) {
-        if (!this.isScanning || this.isPopupActive) return;
+        if (!this.isScanning) return;
         try {
             const result = await this.codeReader.decodeOnceFromVideoElement(video);
             if (result && result.text !== this.lastResult) {
                 this.lastResult = result.text;
-                // Detener escaneo y mostrar popup solo si no hay uno activo
-                this.isScanning = false;
-                if (!this.isPopupActive) {
-                    this.handleScanResult(result.text);
-                }
+                this.handleScanResult(result.text);
                 return;
             }
         } catch (e) {
@@ -73,22 +72,34 @@ class CodeScanner {
         this.scanLoop = requestAnimationFrame(() => this.scanFrame(video));
     }
 
+    pauseScanning() {
+        this.isScanning = false;
+        if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
+        if (this.videoElement) {
+            this.videoElement.pause();
+            this.videoElement.style.display = 'none';
+        }
+    }
+
+    resumeScanning() {
+        if (this.isScanning) return;
+        this.isScanning = true;
+        if (this.videoElement) {
+            this.videoElement.style.display = '';
+            this.videoElement.play();
+            this.scanLoop = requestAnimationFrame(() => this.scanFrame(this.videoElement));
+        }
+    }
+
     async stopScanning() {
         this.isScanning = false;
         if (this.scanLoop) cancelAnimationFrame(this.scanLoop);
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
+        if (this.videoElement) {
+            this.videoElement.pause();
+            this.videoElement.style.display = 'none';
         }
-        this.qrReader.innerHTML = '';
+        // No destruimos el stream ni el videoElement
         this.lastResult = '';
-        // Blindaje extra: liberar video principal si está en el popup
-        let video = document.getElementById('video-principal');
-        if (video && this.qrPopup.contains(video)) {
-            video.pause();
-            video.style.display = 'none';
-            this.qrPopup.removeChild(video);
-        }
     }
 
     async handleScanResult(value) {
@@ -112,7 +123,6 @@ class CodeScanner {
                         if (!navigator.onLine) {
                             // Sin internet: solo usa la base local (SQLite)
                             if (persona.ingreso !== 'Yes') {
-                                // Registrar ingreso en SQLite
                                 fetch(getBackendUrl('/ingreso'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -136,14 +146,10 @@ class CodeScanner {
                                 this.showQrPopup(mensaje, nombre);
                             }
                         } else {
-                            // Con internet: registra en Firebase y SQLite
                             const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
                             try {
                                 const snapshot = await get(dbRef);
                                 if (!snapshot.exists()) {
-                                    // Firebase
-                                    // guardarIngresoEnFirebase(nombre, faccion, 'Yes');
-                                    // SQLite
                                     fetch(getBackendUrl('/ingreso'), {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -182,24 +188,19 @@ class CodeScanner {
             }
             void this.qrPopup.offsetWidth;
             setTimeout(() => {
-                this.stopScanning();
+                // En vez de stopScanning, solo pausar
+                this.pauseScanning();
                 clearTimeout(this.scanTimeout);
                 this.scanTimeout = setTimeout(() => {
                     this.hideQrPopup();
-                    // this.startScanning(); // Ya no reiniciamos aquí, sino en hideQrPopup
+                    // En vez de startScanning, solo reanudar
+                    this.resumeScanning();
                 }, 5000);
             }, 250);
         }, 250);
     }
 
     showQrPopup(value, nombreParam) {
-        // No mostrar popup si ya hay uno activo
-        if (this.isPopupActive) return;
-        this.isPopupActive = true;
-        // Detener escaneo mientras se muestra el popup
-        if (this.isScanning) {
-            this.stopScanning();
-        }
         this.qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
         let faccion = null;
         let nombre = nombreParam || '';
@@ -228,20 +229,20 @@ class CodeScanner {
         if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
             incrementarQrCounter();
         }
+        if (faccion) {
+            this.qrPopup.classList.add(faccion);
+        }
         // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
         const oldVideo = this.qrPopup.querySelector('video.bg-video-faccion');
         if (oldVideo) {
-            try { oldVideo.pause(); oldVideo.srcObject = null; } catch (e) {}
-            if (oldVideo.parentNode) oldVideo.parentNode.removeChild(oldVideo);
+            try { oldVideo.pause(); } catch (e) {}
+            oldVideo.remove();
         }
         this.qrPopup.innerHTML = '';
         // Mover el video precargado al popup si existe y no está ya ahí
         if (faccion && faccionVideos[faccion]) {
             const video = faccionVideos[faccion];
-            // Solo agregar si no está ya en el popup
             if (video.parentNode !== this.qrPopup) {
-                // Pausar y limpiar de su padre anterior
-                try { video.pause(); video.srcObject = null; } catch (e) {}
                 if (video.parentNode) video.parentNode.removeChild(video);
                 video.className = 'bg-video-faccion';
                 video.autoplay = true;
@@ -250,9 +251,6 @@ class CodeScanner {
                 video.playsInline = true;
                 video.style.display = '';
                 this.qrPopup.appendChild(video);
-                // Forzar recarga para liberar recursos
-                video.load();
-                setTimeout(() => { video.play(); }, 100);
             }
         }
         // Crear el bloque de texto del popup de forma segura
@@ -268,35 +266,17 @@ class CodeScanner {
     hideQrPopup() {
         this.qrPopup.classList.add('fade-out');
         setTimeout(() => {
-            this.qrPopup.classList.add('hidden');
+        this.qrPopup.classList.add('hidden');
             // Mover cualquier video de fondo de vuelta al store oculto
-            const v = this.qrPopup.querySelector('video.bg-video-faccion');
+        const v = this.qrPopup.querySelector('video.bg-video-faccion');
             if (v) {
-                try { v.pause(); v.srcObject = null; } catch (e) {}
+                v.pause();
                 v.style.display = 'none';
-                if (videoPreloadStore && videoPreloadStore.appendChild) {
-                    videoPreloadStore.appendChild(v);
-                } else if (v.parentNode) {
-                    v.parentNode.removeChild(v);
-                }
+                videoPreloadStore.appendChild(v);
             }
-            this.qrPopup.innerHTML = '';
+        this.qrPopup.innerHTML = '';
             this.qrPopup.classList.remove('fade-out');
-            // Limpiar timeouts y animaciones
-            if (this.scanTimeout) {
-                clearTimeout(this.scanTimeout);
-                this.scanTimeout = null;
-            }
-            if (this.scanLoop) {
-                cancelAnimationFrame(this.scanLoop);
-                this.scanLoop = null;
-            }
-            this.isPopupActive = false;
-            // Reanudar escaneo después de ocultar el popup
-            if (typeof this.startScanning === 'function') {
-                this.startScanning();
-            }
-            console.log('hideQrPopup ejecutado');
+        console.log('hideQrPopup ejecutado');
         }, 700); // Duración del fade out
     }
 }
@@ -367,15 +347,7 @@ function preloadVideosSequentially(facciones, onComplete) {
     let index = 0;
     function loadNext() {
         if (index >= facciones.length) {
-            // Si la última facción es Azur, esperar un poco más antes de continuar
-            if (facciones[index-1] === 'azur') {
-                preloadText.textContent = 'Azur listo. Esperando...';
-                setTimeout(() => {
-                    onComplete();
-                }, 1200); // Espera adicional de 1.2 segundos
-            } else {
-                onComplete();
-            }
+            onComplete();
             return;
         }
         const faccion = facciones[index];
@@ -461,7 +433,7 @@ function descargarCSV() {
 }
 
 // --- Contador de QR escaneados ---
-const QR_COUNTER_KEY = 'qr_counter_v4';
+const QR_COUNTER_KEY = 'qr_counter_V6';
 let qrCounter = 0;
 
 function cargarQrCounter() {
