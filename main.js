@@ -175,7 +175,7 @@ class CodeScanner {
             if (mensaje === 'QR INCORRECTO' || mensaje === 'No estás en la lista') {
                 this.showQrPopup(mensaje, nombre);
             }
-            if (mensaje && mensaje.startsWith('Bienvenido')) {
+            if (mensaje && mensaje.trim().toLowerCase().startsWith('bienvenido')) {
                 incrementarQrCounter();
             }
             void this.qrPopup.offsetWidth;
