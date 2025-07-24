@@ -269,16 +269,26 @@ function mostrarPreviewCamara(stream) {
         preview.playsInline = true;
         preview.muted = true;
         preview.style.position = 'fixed';
-        preview.style.top = '0';
-        preview.style.left = '0';
-        preview.style.width = '100vw';
-        preview.style.height = '100vh';
-        preview.style.zIndex = 8000; // Debajo del mensaje y contador
-        preview.style.objectFit = 'cover';
+        preview.style.left = '50%';
+        preview.style.top = 'calc(50% + 60px)';
+        preview.style.transform = 'translate(-50%, 0)';
+        preview.style.width = '140px';
+        preview.style.height = '100px';
+        preview.style.zIndex = '9500';
+        preview.style.borderRadius = '14px';
+        preview.style.boxShadow = '0 0 12px #0008';
         preview.style.filter = 'grayscale(1)';
+        preview.style.objectFit = 'cover';
         preview.style.pointerEvents = 'none';
+        preview.style.background = '#111';
+        preview.style.display = 'block';
+        preview.style.border = '2px solid #fff2';
+        preview.style.marginTop = '0';
         document.body.appendChild(preview);
     }
+    // Eliminar cualquier tamaño residual grande
+    preview.style.width = '140px';
+    preview.style.height = '100px';
     preview.srcObject = stream;
     preview.play();
 }

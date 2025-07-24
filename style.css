@@ -189,7 +189,7 @@ body, html, * {
     color: #FFF;
     text-align: center;
     font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
-    font-size: 28.8px; /* Antes: 36px */
+    font-size: 23px; /* Antes: 28.8px */
     font-style: normal;
     font-weight: 500;
     line-height: 118.736%;
@@ -199,6 +199,25 @@ body, html, * {
     user-select: none;
     opacity: 0.95;
     text-shadow: 0 0 12px #0008;
+}
+
+#preview-camara {
+    position: fixed;
+    top: calc(50% + 60px); /* Debajo del texto */
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 140px;
+    height: 100px;
+    z-index: 9500;
+    border-radius: 14px;
+    box-shadow: 0 0 12px #0008;
+    filter: grayscale(1);
+    object-fit: cover;
+    pointer-events: none;
+    background: #111;
+    display: block;
+    border: 2px solid #fff2;
+    margin-top: 16px;
 }
 
 @keyframes fadeIn {
