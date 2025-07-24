@@ -235,8 +235,8 @@ function guardarIngresoEnFirebase(nombre, faccion, ingreso) {
 
 // --- Procesamiento de QR detectado ---
 async function handleScanResult(value) {
-    // Evitar escaneo repetido en menos de 10 segundos
-    if (handleScanResult.lastQrText === value && (Date.now() - handleScanResult.lastQrTime < 10000)) {
+    // Evitar escaneo repetido en menos de 5 segundos
+    if (handleScanResult.lastQrText === value && (Date.now() - handleScanResult.lastQrTime < 5000)) {
         const elapsed = Date.now() - handleScanResult.lastQrTime;
         console.log(`Intento de escanear repetido: '${value}', tiempo transcurrido: ${elapsed} ms, lastQrText: '${handleScanResult.lastQrText}'`);
         return;
@@ -346,8 +346,46 @@ function ocultarMensajeEscaneo() {
 // Mostrar mensaje al inicio
 mostrarMensajeEscaneo();
 
+// Mostrar preview de cámara en blanco y negro
+function mostrarPreviewCamara(stream) {
+    console.log('[Preview] Creando/mostrando preview de cámara', stream);
+    let preview = document.getElementById('preview-camara');
+    if (!preview) {
+        preview = document.createElement('video');
+        preview.id = 'preview-camara';
+        preview.autoplay = true;
+        preview.playsInline = true;
+        preview.muted = true;
+        preview.style.position = 'fixed';
+        preview.style.top = '0';
+        preview.style.left = '0';
+        preview.style.width = '100vw';
+        preview.style.height = '100vh';
+        preview.style.zIndex = 8000; // Debajo del mensaje y contador
+        preview.style.objectFit = 'cover';
+        preview.style.filter = 'grayscale(1)';
+        preview.style.pointerEvents = 'none';
+        document.body.appendChild(preview);
+    }
+    preview.srcObject = stream;
+    preview.play();
+}
+function ocultarPreviewCamara() {
+    let preview = document.getElementById('preview-camara');
+    if (preview) preview.style.display = 'none';
+}
+function mostrarPreviewCamaraVisible() {
+    let preview = document.getElementById('preview-camara');
+    if (preview) preview.style.display = '';
+}
+// Hacer funciones globales para el lector
+window.mostrarPreviewCamara = mostrarPreviewCamara;
+window.ocultarPreviewCamara = ocultarPreviewCamara;
+window.mostrarPreviewCamaraVisible = mostrarPreviewCamaraVisible;
+
 function showQrPopup(value, nombreParam) {
     ocultarMensajeEscaneo();
+    ocultarPreviewCamara();
     const qrPopup = document.getElementById('qr-popup');
     qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
     let faccion = null;
@@ -447,6 +485,7 @@ function hideQrPopup() {
         qrPopup.innerHTML = '';
         qrPopup.classList.remove('fade-out');
         mostrarMensajeEscaneo();
+        mostrarPreviewCamaraVisible();
         console.log('hideQrPopup ejecutado');
     }, 700);
 } 

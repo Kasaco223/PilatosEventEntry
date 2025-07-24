@@ -17,6 +17,10 @@ export class LectorQR {
         console.log('LectorQR: start() llamado');
         const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
         this.stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: videoInputDevices[0]?.deviceId } });
+        // Mostrar preview en main si la función existe
+        if (typeof window.mostrarPreviewCamara === 'function') {
+            window.mostrarPreviewCamara(this.stream);
+        }
         // Crear un elemento video oculto
         this.videoElement = document.createElement('video');
         this.videoElement.setAttribute('playsinline', 'true');

@@ -189,7 +189,7 @@ body, html, * {
     color: #FFF;
     text-align: center;
     font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
-    font-size: 36px;
+    font-size: 28.8px; /* Antes: 36px */
     font-style: normal;
     font-weight: 500;
     line-height: 118.736%;
