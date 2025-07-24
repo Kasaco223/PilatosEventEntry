@@ -115,7 +115,7 @@ body, html, * {
     height: 1.4vw;
     position: fixed;
     left: 50%;
-    bottom: 32px;
+    bottom: 0px; /* Mucho más cerca del borde inferior */
     transform: translateX(-50%);
     display: flex;
     align-items: center;
@@ -183,14 +183,14 @@ body, html, * {
 
 #mensaje-escaneo {
     position: fixed;
-    top: 50%;
+    top: 38%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 9000;
     color: #FFF;
     text-align: center;
     font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
-    font-size: 20.736px; /* 1.2x de 17.28px */
+    font-size: 24.8832px; /* 1.2x de 20.736px (ya era 1.2x antes) */
     font-style: normal;
     font-weight: 500;
     line-height: 118.736%;
@@ -200,6 +200,21 @@ body, html, * {
     user-select: none;
     opacity: 0.95;
     text-shadow: 0 0 12px #0008;
+    margin-bottom: 0;
+}
+
+#preview-camara {
+    width: 140px !important;
+    height: 140px !important;
+    aspect-ratio: 1/1 !important;
+    object-fit: cover !important;
+    border-radius: 0px;
+    position: fixed;
+    left: 50%;
+    bottom: 128px;
+    transform: translateX(-50%);
+    z-index: 9001;
+    box-shadow: 0 0 16px #0008;
 }
 
 @keyframes fadeIn {

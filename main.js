@@ -298,17 +298,10 @@ function mostrarPreviewCamara(stream) {
         preview.autoplay = true;
         preview.playsInline = true;
         preview.muted = true;
-        preview.style.position = 'fixed';
-        preview.style.left = '50%';
-        preview.style.top = 'calc(50% + 60px)'; // Debajo del mensaje de escaneo
-        preview.style.transform = 'translate(-50%, 0)';
-        preview.style.width = '180px';
-        preview.style.height = '120px';
-        preview.style.zIndex = 9001;
-        preview.style.objectFit = 'cover';
+        preview.style.border = '20%';
         preview.style.filter = 'grayscale(1)';
         preview.style.pointerEvents = 'none';
-        preview.style.borderRadius = '18px';
+        preview.style.borderRadius = '0px';
         preview.style.boxShadow = '0 0 16px #0008';
         document.body.appendChild(preview);
     }
