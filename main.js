@@ -5,7 +5,10 @@
 
 // Importar ZXing para escaneo universal
 import { BrowserMultiFormatReader } from '@zxing/browser';
-// Eliminar importaciones y configuración de Firebase
+// Eliminar imports de Firebase
+// import { initializeApp } from "firebase/app";
+// import { getDatabase, ref, set, get } from "firebase/database";
+// import { getAnalytics } from "firebase/analytics";
 import { LectorQR } from './lector.js';
 
 // Eliminar la clase CodeScanner y toda la lógica de escaneo QR
@@ -193,10 +196,28 @@ function actualizarQrCounterUI() {
     counterDiv.textContent = qrCounter;
 }
 
+// --- Configuración de IP del backend ---
+//192.168.156.20:4321 TpLink Ras
+//192.168.156.20:4321 celular Ras
+//192.168.1.2:4321 Casa Pc
+
+const backendIp = "192.168.156.20:4321";
+ // IP FIJA DEL BACKEND
+function getBackendUrl(path) {
+    return `http://${backendIp}${path}`;
+}
+
+// Eliminar configuración y funciones de Firebase
+// const firebaseConfig = { ... };
+// const app = initializeApp(firebaseConfig);
+// const db = getDatabase(app);
+// const analytics = getAnalytics(app);
+// function guardarIngresoEnFirebase(...) { ... }
+
 // --- Procesamiento de QR detectado ---
 async function handleScanResult(value) {
     // Evitar escaneo repetido en menos de 5 segundos
-    if (handleScanResult.lastQrText === value && (Date.now() - handleScanResult.lastQrTime < 5000)) {
+    if (handleScanResult.lastQrText === value && (Date.now() - handleScanResult.lastQrTime < 6000)) {
         const elapsed = Date.now() - handleScanResult.lastQrTime;
         console.log(`Intento de escanear repetido: '${value}', tiempo transcurrido: ${elapsed} ms, lastQrText: '${handleScanResult.lastQrText}'`);
         return;
@@ -218,15 +239,25 @@ async function handleScanResult(value) {
         } else {
             let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
             if (persona) {
-                if (persona.ingreso !== 'Yes') {
-                    // Registrar ingreso localmente
-                    persona.ingreso = 'Yes';
-                    guardarEnLocalStorage();
-                    mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                } else {
-                    mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                }
-                showQrPopup(mensaje, nombre);
+                // Siempre usar el backend local para registrar ingreso y comprobar si ya ingresó
+                fetch(getBackendUrl('/ingreso'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
+                    } else {
+                        mensaje = 'Error registrando ingreso local.';
+                    }
+                    showQrPopup(mensaje, nombre);
+                })
+                .catch(err => {
+                    mensaje = 'Error registrando ingreso local.';
+                    showQrPopup(mensaje, nombre);
+                });
             } else {
                 mensaje = 'No estás en la lista';
                 showQrPopup(mensaje, nombre);
@@ -258,7 +289,6 @@ function ocultarMensajeEscaneo() {
 // Mostrar mensaje al inicio
 mostrarMensajeEscaneo();
 
-// Mostrar preview de cámara en blanco y negro
 function mostrarPreviewCamara(stream) {
     console.log('[Preview] Creando/mostrando preview de cámara', stream);
     let preview = document.getElementById('preview-camara');
@@ -270,25 +300,18 @@ function mostrarPreviewCamara(stream) {
         preview.muted = true;
         preview.style.position = 'fixed';
         preview.style.left = '50%';
-        preview.style.top = 'calc(50% + 60px)';
+        preview.style.top = 'calc(50% + 60px)'; // Debajo del mensaje de escaneo
         preview.style.transform = 'translate(-50%, 0)';
-        preview.style.width = '140px';
-        preview.style.height = '100px';
-        preview.style.zIndex = '9500';
-        preview.style.borderRadius = '14px';
-        preview.style.boxShadow = '0 0 12px #0008';
-        preview.style.filter = 'grayscale(1)';
+        preview.style.width = '180px';
+        preview.style.height = '120px';
+        preview.style.zIndex = 9001;
         preview.style.objectFit = 'cover';
+        preview.style.filter = 'grayscale(1)';
         preview.style.pointerEvents = 'none';
-        preview.style.background = '#111';
-        preview.style.display = 'block';
-        preview.style.border = '2px solid #fff2';
-        preview.style.marginTop = '0';
+        preview.style.borderRadius = '18px';
+        preview.style.boxShadow = '0 0 16px #0008';
         document.body.appendChild(preview);
     }
-    // Eliminar cualquier tamaño residual grande
-    preview.style.width = '140px';
-    preview.style.height = '100px';
     preview.srcObject = stream;
     preview.play();
 }
@@ -300,7 +323,6 @@ function mostrarPreviewCamaraVisible() {
     let preview = document.getElementById('preview-camara');
     if (preview) preview.style.display = '';
 }
-// Hacer funciones globales para el lector
 window.mostrarPreviewCamara = mostrarPreviewCamara;
 window.ocultarPreviewCamara = ocultarPreviewCamara;
 window.mostrarPreviewCamaraVisible = mostrarPreviewCamaraVisible;
