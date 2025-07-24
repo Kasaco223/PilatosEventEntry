@@ -178,6 +178,7 @@ body, html, * {
     border-radius: 1vw;
     padding: 1vw 2vw;
     box-shadow: 0 0 30px #0008;
+    display: none !important;
 }
 
 #mensaje-escaneo {
@@ -189,7 +190,7 @@ body, html, * {
     color: #FFF;
     text-align: center;
     font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
-    font-size: 17.28px; /* Antes: 28.8px */
+    font-size: 20.736px; /* 1.2x de 17.28px */
     font-style: normal;
     font-weight: 500;
     line-height: 118.736%;
