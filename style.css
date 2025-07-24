@@ -50,7 +50,7 @@ body, html, * {
     max-width: 98vw;
     text-align: center;
     font-family: 'Glancyr-Light', Arial, sans-serif !important;
-    font-size: 3.3vw !important;
+    font-size: 3.135vw !important; /* 5% menos que 3.3vw */
     font-style: normal;
     font-weight: 300;
     line-height: 118.736%;
@@ -77,7 +77,7 @@ body, html, * {
 .qr-popup-content .nombre-usuario {
     color: #FFF;
     font-family: 'Glancyr-Medium', Arial, sans-serif !important;
-    font-size: 3.3vw;
+    font-size: 3.135vw;
     font-style: normal;
     font-weight: 500;
     line-height: 118.736%;
@@ -91,7 +91,7 @@ body, html, * {
     white-space: nowrap;
 }
 .qr-popup-content .faccion-nombre {
-    font-size: 3.3vw;
+    font-size: 3.135vw;
     font-style: normal;
     font-weight: 300;
     line-height: 118.736%;
