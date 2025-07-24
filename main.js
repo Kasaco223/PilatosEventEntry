@@ -5,10 +5,7 @@
 
 // Importar ZXing para escaneo universal
 import { BrowserMultiFormatReader } from '@zxing/browser';
-// Importar Firebase
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get } from "firebase/database";
-import { getAnalytics } from "firebase/analytics";
+// Eliminar importaciones y configuración de Firebase
 import { LectorQR } from './lector.js';
 
 // Eliminar la clase CodeScanner y toda la lógica de escaneo QR
@@ -196,43 +193,6 @@ function actualizarQrCounterUI() {
     counterDiv.textContent = qrCounter;
 }
 
-// --- Configuración de IP del backend ---
-//192.168.156.20:4321 TpLink Ras
-//192.168.156.20:4321 celular Ras
-//192.168.1.2:4321 Casa Pc
-
-const backendIp = "192.168.156.20:4321";
- // IP FIJA DEL BACKEND
-function getBackendUrl(path) {
-    return `http://${backendIp}${path}`;
-}
-
-// Configuración de Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBdRurntttFacCwYBrtIk14ciDepiJ7wfM",
-  authDomain: "ingresopilatos.firebaseapp.com",
-  databaseURL: "https://ingresopilatos-default-rtdb.firebaseio.com",
-  projectId: "ingresopilatos",
-  storageBucket: "ingresopilatos.firebasestorage.app",
-  messagingSenderId: "477684863667",
-  appId: "1:477684863667:web:1c7bf31738c7d1460d96c6",
-  measurementId: "G-Y1W4YNTD9P"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const analytics = getAnalytics(app);
-
-function guardarIngresoEnFirebase(nombre, faccion, ingreso) {
-    const now = new Date();
-    const horaColombia = new Date(now.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
-    set(ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_')), {
-        faccion: faccion,
-        ingreso: ingreso,
-        hora: horaColombia.toISOString().replace('T', ' ').substring(0, 19)
-    });
-} 
-
 // --- Procesamiento de QR detectado ---
 async function handleScanResult(value) {
     // Evitar escaneo repetido en menos de 5 segundos
@@ -244,7 +204,6 @@ async function handleScanResult(value) {
     handleScanResult.lastQrText = value;
     handleScanResult.lastQrTime = Date.now();
     console.log('Nuevo QR procesado:', value, 'Hora:', handleScanResult.lastQrTime);
-    // --- Aquí va la lógica de procesamiento, popup, contador, etc. ---
     let mensaje = '';
     let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
     let nombre = '';
@@ -259,62 +218,15 @@ async function handleScanResult(value) {
         } else {
             let persona = mogData.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
             if (persona) {
-                if (!navigator.onLine) {
-                    if (persona.ingreso !== 'Yes') {
-                        fetch(getBackendUrl('/ingreso'), {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ nombre })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                            } else {
-                                mensaje = 'Error registrando ingreso local.';
-                            }
-                            showQrPopup(mensaje, nombre);
-                        })
-                        .catch(err => {
-                            mensaje = 'Error registrando ingreso local.';
-                            showQrPopup(mensaje, nombre);
-                        });
-                    } else {
-                        mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                        showQrPopup(mensaje, nombre);
-                    }
+                if (persona.ingreso !== 'Yes') {
+                    // Registrar ingreso localmente
+                    persona.ingreso = 'Yes';
+                    guardarEnLocalStorage();
+                    mensaje = `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
                 } else {
-                    const dbRef = ref(db, 'ingresos/' + nombre.replace(/\s+/g, '_'));
-                    try {
-                        const snapshot = await get(dbRef);
-                        if (!snapshot.exists()) {
-                            fetch(getBackendUrl('/ingreso'), {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ nombre })
-                            })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.success) {
-                                    mensaje = data.mensaje || `Bienvenido ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                                } else {
-                                    mensaje = 'Error registrando ingreso local.';
-                                }
-                                showQrPopup(mensaje, nombre);
-                            })
-                            .catch(err => {
-                                mensaje = 'Error registrando ingreso local.';
-                                showQrPopup(mensaje, nombre);
-                            });
-                        } else {
-                            mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
-                            showQrPopup(mensaje, nombre);
-                        }
-                    } catch (error) {
-                        mensaje = 'Error consultando ingreso. Intenta de nuevo.';
-                        showQrPopup(mensaje, nombre);
-                    }
+                    mensaje = `Bienvenido de nuevo ${persona.nombre}. Tu facción es ${persona.faccion}`;
                 }
+                showQrPopup(mensaje, nombre);
             } else {
                 mensaje = 'No estás en la lista';
                 showQrPopup(mensaje, nombre);
