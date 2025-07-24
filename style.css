@@ -201,6 +201,7 @@ body, html, * {
     opacity: 0.95;
     text-shadow: 0 0 12px #0008;
     margin-bottom: 0;
+    white-space: nowrap;
 }
 
 #preview-camara {
@@ -212,7 +213,7 @@ body, html, * {
     position: fixed;
     left: 50%;
     bottom: 128px;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scaleX(-1); /* Modo espejo */
     z-index: 9001;
     box-shadow: 0 0 16px #0008;
 }
