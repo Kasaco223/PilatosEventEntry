@@ -8,6 +8,10 @@
     <!-- Las librerías se importan como módulos ES6 en main.js -->
 </head>
 <body>
+    <div id="bg-svg">
+      <img src="public/Bg_Enter.svg" alt="Fondo" />
+    </div>
+    <img id="title-svg" src="public/Title_Enter.svg" alt="THE CALLING" />
     <div id="preload-overlay" style="
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -28,7 +32,13 @@
         text-transform: uppercase;
       ">Cargando . . .</span>
     </div>
+    <div id="preview-camara-border">
+      <video id="preview-camara" autoplay playsinline></video>
+    </div>
     <div id="video-preload-store" style="display:none;"></div>
+    <div id="mensaje-escaneo"></div>
+    <div id="descubre-faccion">DESCUBRE TU<br>FACCIÓN</div>
+
     <div class="container">
         <div class="scanner-container">
             <div class="camera-container">

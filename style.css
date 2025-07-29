@@ -11,9 +11,47 @@
     font-style: normal;
 }
 
-body, html {
-  background: #000 !important;
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  /* background: #000 !important; */
   cursor: none !important;
+}
+
+#bg-svg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+#bg-svg img {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#title-svg {
+  position: fixed;
+  top: 3vw;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150vw;
+
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Scrollbars invisibles pero presentes */
@@ -32,7 +70,7 @@ body, html, * {
 .qr-popup {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: #000;
+    background: transparent !important;
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -111,28 +149,27 @@ body, html, * {
 }
 
 .pilatos-logo-container {
-    width: 15.5vw;
-    height: 1.4vw;
-    position: fixed;
-    left: 50%;
-    bottom: 0px; /* Mucho más cerca del borde inferior */
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    pointer-events: none;
-    min-width: 100px;
-    min-height: 20px;
+  width: 169.082px;
+  height: 27.337px;
+  position: fixed;
+  left: 50%;
+  bottom: 0px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+  min-width: 100px;
+  min-height: 20px;
 }
 .pilatos-logo {
-    width: 15.5vw;
-    height: 1.4vw;
-    display: block;
-    margin-bottom: 100%;
-    flex-shrink: 0;
-    min-width: 100px;
-    min-height: 20px;
+  width: 169.082px;
+  height: 27.337px;
+  flex-shrink: 0;
+  fill: #FFECAD;
+  opacity: 0.42;
+  margin-bottom: 100%;
 }
 
 .qr-popup video.bg-video-faccion {
@@ -156,7 +193,7 @@ body, html, * {
     margin: 0;
     padding: 0;
     z-index: 1;
-    background: #000;
+    background: transparent !important;
     object-fit: cover;
     display: block;
 }
@@ -182,40 +219,79 @@ body, html, * {
 }
 
 #mensaje-escaneo {
-    position: fixed;
-    top: 38%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9000;
-    color: #FFF;
-    text-align: center;
-    font-family: 'Glancyr', 'Glancyr-Medium', Arial, sans-serif;
-    font-size: 24.8832px; /* 1.2x de 20.736px (ya era 1.2x antes) */
-    font-style: normal;
-    font-weight: 500;
-    line-height: 118.736%;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    pointer-events: none;
-    user-select: none;
-    opacity: 0.95;
-    text-shadow: 0 0 12px #0008;
-    margin-bottom: 0;
-    white-space: nowrap;
+  width: 439.411px;
+  height: 57.711px;
+  flex-shrink: 0;
+  color: #FFF;
+  text-align: center;
+  font-family: 'Glancyr', Arial, sans-serif;
+  font-size: 48px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 118.736%; /* 56.993px */
+  text-transform: uppercase;
+  position: fixed;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  z-index: 9000;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.95;
+  text-shadow: 0 0 12px #0008;
+  margin-bottom: 0;
+  white-space: normal;
+}
+
+#preview-camara-border {
+  width: 240px;
+  height: 240px;
+
+  position: fixed;
+  left: 50%;
+  top: 45%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background-color: #FFBE5B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
 }
 
 #preview-camara {
-    width: 140px !important;
-    height: 140px !important;
-    aspect-ratio: 1/1 !important;
-    object-fit: cover !important;
-    border-radius: 0px;
-    position: fixed;
-    left: 50%;
-    bottom: 128px;
-    transform: translateX(-50%) scaleX(-1); /* Modo espejo */
-    z-index: 9001;
-    box-shadow: 0 0 16px #0008;
+  width: 240px;
+  height: 240px;
+  object-fit: cover !important;
+  filter: grayscale(1);
+  transform: scaleX(-1);
+  position: static;
+  box-shadow: none;
+  border: none;
+}
+
+#descubre-faccion {
+  width: 340px;
+  height: 98.209px;
+  flex-shrink: 0;
+  color: #FFBE5B;
+  text-align: center;
+  text-shadow: 0 0 18px rgba(255, 157, 0, 0.38);
+  font-family: 'Glancyr', Arial, sans-serif;
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 118.736%; /* 47.494px */
+  text-transform: uppercase;
+  position: fixed;
+  left: 50%;
+  bottom: 20%;
+  transform: translateX(-50%);
+  z-index: 3;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
 }
 
 @keyframes fadeIn {
