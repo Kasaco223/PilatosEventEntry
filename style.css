@@ -46,11 +46,11 @@ html, body {
 #title-svg {
   position: fixed;
   left: 50%;
-  top: 8vw; /* 3vw + 5vw (5% de la pantalla aprox) */
+  top: 3vw; /* 8vw - 5vw (5% de la pantalla aprox) */
   transform: translateX(-50%);
-  width: 76.146vw; /* 77.7vw * 0.98 */
-  max-width: 100.842vw; /* 102.9vw * 0.98 */
-  min-width: 329.28px; /* 336px * 0.98 */
+  width: 68.5314vw; /* 76.146vw * 0.9 */
+  max-width: 90.7578vw; /* 100.842vw * 0.9 */
+  min-width: 296.352px; /* 329.28px * 0.9 */
   z-index: 0;
   pointer-events: none;
   user-select: none;
@@ -403,7 +403,7 @@ body, html, * {
   transform: translate(-50%, -50%);
   font-family: 'Glancyr-Light', Arial, sans-serif !important;
   font-weight: 300 !important;
-  font-size: 2.816vw; /* 2.56vw * 1.1 */
+  font-size: 3.0976vw; /* 2.816vw * 1.1 */
   color: #FFF;
   text-align: center;
   text-transform: uppercase;
