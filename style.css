@@ -48,9 +48,9 @@ html, body {
   left: 50%;
   top: 8vw; /* 3vw + 5vw (5% de la pantalla aprox) */
   transform: translateX(-50%);
-  width: 77.7vw; /* 74vw * 1.05 */
-  max-width: 102.9vw; /* 98vw * 1.05 */
-  min-width: 336px; /* 320px * 1.05 */
+  width: 76.146vw; /* 77.7vw * 0.98 */
+  max-width: 100.842vw; /* 102.9vw * 0.98 */
+  min-width: 329.28px; /* 336px * 0.98 */
   z-index: 0;
   pointer-events: none;
   user-select: none;
@@ -412,6 +412,7 @@ body, html, * {
   text-shadow: 0 0 12px #0008;
   user-select: none;
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .descubre-faccion {
