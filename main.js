@@ -201,7 +201,7 @@ function descargarCSV() {
 //192.168.1.2:4321 Casa Pc
 //192.168.1.13:4321 Ofi 
 
-const backendIp = "192.168.1.13:4321";
+const backendIp = "192.168.156.20:4321";
  // IP FIJA DEL BACKEND
 function getBackendUrl(path) {
     return `http://${backendIp}${path}`;
