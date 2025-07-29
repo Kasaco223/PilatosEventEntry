@@ -274,23 +274,10 @@ async function handleScanResult(value) {
 handleScanResult.lastQrText = '';
 handleScanResult.lastQrTime = 0; 
 
-// Crear el mensaje de escaneo si no existe
-function mostrarMensajeEscaneo() {
-    let msg = document.getElementById('mensaje-escaneo');
-    if (!msg) {
-        msg = document.createElement('div');
-        msg.id = 'mensaje-escaneo';
-        document.body.appendChild(msg);
-    }
-    msg.innerHTML = 'Escanea tu QR.<br>';
-    msg.style.display = '';
-}
-function ocultarMensajeEscaneo() {
-    let msg = document.getElementById('mensaje-escaneo');
-    if (msg) msg.style.display = 'none';
-}
-// Mostrar mensaje al inicio
-mostrarMensajeEscaneo();
+// Eliminar funciones y referencias a mensaje-escaneo
+// function mostrarMensajeEscaneo() { ... }
+// function ocultarMensajeEscaneo() { ... }
+// mostrarMensajeEscaneo();
 
 function mostrarPreviewCamara(stream) {
     let preview = document.getElementById('preview-camara');
@@ -323,7 +310,6 @@ window.ocultarPreviewCamara = ocultarPreviewCamara;
 window.mostrarPreviewCamaraVisible = mostrarPreviewCamaraVisible;
 
 function showQrPopup(value, nombreParam) {
-    ocultarMensajeEscaneo();
     ocultarPreviewCamara();
     const qrPopup = document.getElementById('qr-popup');
     qrPopup.classList.remove('obscura', 'lumen', 'prima', 'terra', 'azur');
@@ -415,7 +401,6 @@ function hideQrPopup() {
         }
         qrPopup.innerHTML = '';
         qrPopup.classList.remove('fade-out');
-        mostrarMensajeEscaneo();
         mostrarPreviewCamaraVisible();
     }, 700);
 } 
