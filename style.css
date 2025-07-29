@@ -28,19 +28,19 @@ html, body {
   z-index: -1;
   overflow: hidden;
   width: 100vw;
-  height: 100vh;
+  height: 1100px !important;
   background: #000;
   /* Asegura que el fondo cubra toda la pantalla */
 }
 
 #bg-svg img {
   width: 100vw;
-  height: 100vh; /* Doble de alto */
+ 
   object-fit: cover;
   object-position: top center;
   display: block;
   position: absolute;
-  margin-top: 100%;
+
 }
 
 #title-svg {
@@ -378,10 +378,10 @@ body, html, * {
   }
   #bg-svg img {
     width: 100vw;
-    height: 100vh;
+
     object-fit: cover;
     object-position: center;
-    margin-top: 100%;
+
   }
   .qr-popup-content {
     padding-top: 3em;
