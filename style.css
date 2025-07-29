@@ -45,10 +45,10 @@ html, body {
 
 #title-svg {
   position: fixed;
-  top: 3vw;
+  top: 6vw;
   left: 50%;
   transform: translateX(-50%);
-  width: 74vw; /* Igual que los popups */
+  width: 30vw; /* Igual que los popups */
   max-width: 98vw;
   min-width: 320px;
   z-index: 0;
@@ -394,4 +394,40 @@ body, html, * {
   font-weight: 300 !important;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+} 
+
+.escanea-qr {
+  position: fixed;
+  left: 50%;
+  top: 28%;
+  transform: translate(-50%, -50%);
+  font-family: 'Glancyr-Light', Arial, sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 2.56vw;
+  color: #FFF;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  text-shadow: 0 0 12px #0008;
+  user-select: none;
+  pointer-events: none;
+}
+
+.descubre-faccion {
+  position: fixed;
+  left: 50%;
+  bottom: 20%;
+  transform: translateX(-50%);
+  font-family: 'Glancyr-Light', Arial, sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 2.7vw;
+  color: #FFBE5B;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  text-shadow: 0 0 18px rgba(255, 157, 0, 0.38);
+  user-select: none;
+  pointer-events: none;
 } 
