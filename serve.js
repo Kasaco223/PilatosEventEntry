@@ -19,6 +19,29 @@ app.get('/persona/:nombre', (req, res) => {
   });
 });
 
+// Crear nueva persona
+app.post('/persona', (req, res) => {
+  const { nombre, faccion, ingreso = 'No' } = req.body;
+  
+  if (!nombre || !faccion) {
+    return res.status(400).json({error: 'Nombre y facción son requeridos'});
+  }
+  
+  console.log('Creando nuevo usuario:', nombre, 'facción:', faccion);
+  
+  db.run('INSERT INTO personas (nombre, faccion, ingreso, hora_ingreso) VALUES (?, ?, ?, ?)', 
+    [nombre.trim(), faccion.trim(), ingreso, ''], 
+    function(err) {
+      if (err) {
+        console.error('Error creando usuario:', err.message);
+        return res.status(500).json({error: err.message});
+      }
+      console.log('Nuevo usuario creado con ID:', this.lastID);
+      res.json({success: true, id: this.lastID, mensaje: `Usuario ${nombre} creado exitosamente`});
+    }
+  );
+});
+
 // Marcar ingreso y guardar hora con logs detallados
 app.post('/ingreso', (req, res) => {
   let { nombre } = req.body;

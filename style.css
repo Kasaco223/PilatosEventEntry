@@ -145,6 +145,81 @@ body, html, * {
 .qr-popup-content .faccion-nombre.prima { color: #AEAEAE; }
 .qr-popup-content .faccion-nombre.terra { color: #B8CD60; }
 
+.prima-texto-adicional {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 2.4vw; /* 24/36 = 0.666... del tamaño base */
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-top: 1em;
+    opacity: 0;
+    animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    display: block;
+}
+
+.azur-texto-adicional {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 2.4vw;
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-top: 1em;
+    opacity: 0;
+    animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    display: block;
+}
+
+.obscura-texto-adicional {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 2.4vw;
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-top: 1em;
+    opacity: 0;
+    animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    display: block;
+}
+
+.lumen-texto-adicional {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 2.4vw;
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-top: 1em;
+    opacity: 0;
+    animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    display: block;
+}
+
+.terra-texto-adicional {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 2.4vw;
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-top: 1em;
+    opacity: 0;
+    animation: slideUpFadeIn 2.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    display: block;
+}
+
 .spaced {
   margin-top: 1.2em;
   display: block;
@@ -367,6 +442,21 @@ body, html, * {
 
 .qr-popup.fade-out {
   animation: popupFadeOut 0.7s forwards;
+}
+
+.qr-popup.qr-incorrecto {
+    background: #000 !important;
+}
+
+.qr-incorrecto-text {
+    font-family: 'Glancyr-Light', Arial, sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 4vw;
+    color: #FFF;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 20px #000;
 }
 
 @media (orientation: portrait) {

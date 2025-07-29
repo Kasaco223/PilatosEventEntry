@@ -200,6 +200,7 @@ function descargarCSV() {
 //192.168.156.20:4321 celular Ras
 //192.168.1.2:4321 Casa Pc
 //192.168.1.13:4321 Ofi 
+//10.10.16.121:4321" rooftoop 
 
 const backendIp = "192.168.0.115:4321";
  // IP FIJA DEL BACKEND
@@ -216,60 +217,98 @@ function getBackendUrl(path) {
 
 // --- Procesamiento de QR detectado ---
 async function handleScanResult(value) {
-    // Evitar escaneo repetido en menos de 6 segundos, sin importar si el QR es igual o diferente
-    if (Date.now() - handleScanResult.lastQrTime < 6000) {
-        const elapsed = Date.now() - handleScanResult.lastQrTime;
+    // Evitar procesar el mismo QR múltiples veces
+    const now = Date.now();
+    if (value === handleScanResult.lastQrText && (now - handleScanResult.lastQrTime) < 5000) {
         return;
     }
     handleScanResult.lastQrText = value;
-    handleScanResult.lastQrTime = Date.now();
+    handleScanResult.lastQrTime = now;
+
+    console.log('QR detectado:', value);
+    
+    // Extraer nombre y facción del QR
+    let nombre = value.trim();
+    let faccion = null;
+    
+    // Validar formato del QR (debe empezar con letra de facción + guión)
+    if (!nombre.match(/^[OLPTA]-/)) {
+        showQrPopup('Lo sentimos, este QR no está registrado', '');
+        return;
+    }
+    
+    // Detectar facción basada en el primer carácter
+    if (nombre.startsWith('O')) {
+        faccion = 'Obscura';
+    } else if (nombre.startsWith('L')) {
+        faccion = 'Lumen';
+    } else if (nombre.startsWith('P')) {
+        faccion = 'Prima';
+    } else if (nombre.startsWith('T')) {
+        faccion = 'Terra';
+    } else if (nombre.startsWith('A')) {
+        faccion = 'Azur';
+    } else {
+        showQrPopup('Lo sentimos, este QR no está registrado', '');
+        return;
+    }
+    
+    // Eliminar el prefijo de facción (primera letra + guión) del nombre
+    nombre = nombre.substring(2).trim();
+    
+    // Validar que el nombre no esté vacío después de quitar el prefijo
+    if (!nombre || nombre === '') {
+        showQrPopup('Lo sentimos, este QR no está registrado', '');
+        return;
+    }
+
     let mensaje = '';
-    let match = value.match(/^([OLPTA])-([\w\sÁÉÍÓÚáéíóúÑñ]+)$/);
-    let nombre = '';
-    if (!match) {
-        mensaje = 'QR INCORRECTO';
-        showQrPopup(mensaje, nombre);
-        return;
-    }
-    const inicial = match[1];
-    nombre = match[2].trim();
-    const faccion = FACCIONES[inicial];
-    if (!faccion) {
-        mensaje = 'QR INCORRECTO';
-        showQrPopup(mensaje, nombre);
-        return;
-    }
-    // Consultar al backend si la persona existe
+    
     try {
+        // Intentar consultar si el usuario ya existe
         const res = await fetch(getBackendUrl(`/persona/${encodeURIComponent(nombre)}`));
+        
         if (!res.ok) {
-            mensaje = 'No estás en la lista';
-            showQrPopup(mensaje, nombre);
-            return;
-        }
-        // Si existe, registrar ingreso como antes
-        await fetch(getBackendUrl('/ingreso'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
+            // Usuario no existe, agregarlo como nuevo
+            const newUserData = {
+                nombre: nombre,
+                faccion: faccion,
+                ingreso: 'No'
+            };
+            
+            // Agregar a la base de datos
+            const addRes = await fetch(getBackendUrl('/persona'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUserData)
+            });
+            
+            if (addRes.ok) {
+                mensaje = `Bienvenido ${nombre}. Tu facción es ${faccion}`;
+            } else {
+                mensaje = `Error agregando nuevo usuario: ${nombre}`;
+            }
+        } else {
+            // Usuario existe, registrar ingreso
+            const ingresoRes = await fetch(getBackendUrl('/ingreso'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre })
+            });
+            
+            if (ingresoRes.ok) {
+                const data = await ingresoRes.json();
                 mensaje = data.mensaje || `Bienvenido ${nombre}. Tu facción es ${faccion}`;
             } else {
-                mensaje = 'Error registrando ingreso local.';
+                mensaje = `Error registrando ingreso para: ${nombre}`;
             }
-            showQrPopup(mensaje, nombre);
-        })
-        .catch(err => {
-            mensaje = 'Error registrando ingreso local.';
-            showQrPopup(mensaje, nombre);
-        });
+        }
     } catch (err) {
-        mensaje = 'Error consultando al backend.';
-        showQrPopup(mensaje, nombre);
+        console.error('Error procesando QR:', err);
+        mensaje = `Error procesando QR: ${nombre}`;
     }
+    
+    showQrPopup(mensaje, nombre);
 }
 handleScanResult.lastQrText = '';
 handleScanResult.lastQrTime = 0; 
@@ -317,32 +356,44 @@ function showQrPopup(value, nombreParam) {
     let nombre = nombreParam || '';
     let fac = '';
     let mensaje = value;
-    // Detectar facción y nombre si el mensaje es del tipo esperado
-    if (typeof value === 'string') {
-        if (value.includes('Obscura')) faccion = 'obscura';
-        else if (value.includes('Lumen')) faccion = 'lumen';
-        else if (value.includes('Prima')) faccion = 'prima';
-        else if (value.includes('Terra')) faccion = 'terra';
-        else if (value.includes('Azur')) faccion = 'azur';
-        // Separar nombre y facción si el mensaje es del tipo "Bienvenido de vuelta NOMBRE. Tu facción es FACCION"
-        const match = value.match(/^Bienvenido de vuelta ([^.,]+)[.,]?\s*Tu facci[oó]n es ([A-Za-zÁÉÍÓÚáéíóúÑñ]+)\.?$/i);
-        if (match) {
-            nombre = match[1].trim();
-            fac = match[2].trim();
-            let facClass = faccion ? faccion : '';
-            mensaje = `<span class='bienvenida'>Bienvenido de vuelta</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${facClass}'>${fac.toUpperCase()}</span></span>`;
-        } else if (faccion && nombre) {
-            // Usuario nuevo, pero con facción válida y nombre definido
-            mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
+    
+    // Si es QR incorrecto, usar fondo negro
+    if (value === 'Lo sentimos, este QR no está registrado') {
+        qrPopup.classList.add('qr-incorrecto');
+        mensaje = `<span class='qr-incorrecto-text'>Lo sentimos, este QR no está registrado</span>`;
+    } else {
+        // Detectar facción y nombre si el mensaje es del tipo esperado
+        if (typeof value === 'string') {
+            if (value.includes('Obscura')) faccion = 'obscura';
+            else if (value.includes('Lumen')) faccion = 'lumen';
+            else if (value.includes('Prima')) faccion = 'prima';
+            else if (value.includes('Terra')) faccion = 'terra';
+            else if (value.includes('Azur')) faccion = 'azur';
+            
+            // Siempre usar "Bienvenido" sin importar si el usuario ya se registró antes
+            if (faccion && nombre) {
+                // Si es Prima, agregar el texto adicional
+                if (faccion === 'prima') {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span><br><br><span class='prima-texto-adicional slide-up-fade-in'>No sigues tendencias. Las inauguras.<br>Tu estilo es origen. Tu actitud, ley.</span>`;
+                } else if (faccion === 'azur') {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span><br><br><span class='azur-texto-adicional slide-up-fade-in'>Fría mente. Paso firme.<br>Estilo que fluye como el agua.<br>Donde hay calma, hay poder.</span>`;
+                } else if (faccion === 'obscura') {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span><br><br><span class='obscura-texto-adicional slide-up-fade-in'>Te mueves entre sombras.<br>Tu estilo no grita, susurra.<br>Eres la presencia que nadie olvida.</span>`;
+                } else if (faccion === 'lumen') {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span><br><br><span class='lumen-texto-adicional slide-up-fade-in'>Donde pisas, enciendes.<br>Tu estilo irradia.<br>No sigues el camino, lo iluminas.</span>`;
+                } else if (faccion === 'terra') {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span><br><br><span class='terra-texto-adicional slide-up-fade-in'>Auténtico. Orgánico. Irrepetible.<br>Tu estilo nace de la tierra<br>y vibra con el alma.</span>`;
+                } else {
+                    mensaje = `<span class='bienvenida'>Bienvenido</span><span class='nombre-usuario spaced'>${nombre.toUpperCase()}</span><br><br><span class='faccion-label-nombre slide-up-fade-in'>Tu facción es <span class='faccion-nombre ${faccion}'>${faccion.charAt(0).toUpperCase() + faccion.slice(1)}</span></span>`;
+                }
+            }
+        }
+        
+        if (faccion) {
+            qrPopup.classList.add(faccion);
         }
     }
-    // Incrementar el contador solo si es un mensaje de bienvenida
-    // if (typeof value === 'string' && value.trim().toLowerCase().startsWith('bienvenido')) {
-    //     incrementarQrCounter();
-    // }
-    if (faccion) {
-        qrPopup.classList.add(faccion);
-    }
+    
     // Limpiar el contenido anterior y pausar/eliminar cualquier video existente
     const oldVideo = qrPopup.querySelector('video.bg-video-faccion');
     if (oldVideo) {
