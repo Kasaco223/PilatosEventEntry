@@ -30,12 +30,14 @@ html, body {
   width: 100vw;
   height: 100vh;
   background: #000;
+  /* Asegura que el fondo cubra toda la pantalla */
 }
 
 #bg-svg img {
   width: 100vw;
   height: 100vh;
   object-fit: cover;
+  object-position: center;
   display: block;
   position: absolute;
   top: 0;
@@ -47,8 +49,9 @@ html, body {
   top: 3vw;
   left: 50%;
   transform: translateX(-50%);
-  width: 150vw;
-
+  width: 74vw; /* Igual que los popups */
+  max-width: 98vw;
+  min-width: 320px;
   z-index: 0;
   pointer-events: none;
   user-select: none;
@@ -356,6 +359,18 @@ body, html, * {
 }
 
 @media (orientation: portrait) {
+  #title-svg {
+    width: 88vw;
+    max-width: 98vw;
+    min-width: 220px;
+    top: 4vw;
+  }
+  #bg-svg img {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    object-position: center;
+  }
   .qr-popup-content {
     padding-top: 3em;
   }
