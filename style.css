@@ -35,28 +35,12 @@ html, body {
 
 #bg-svg img {
   width: 100vw;
-  height: 200vh; /* Doble de alto */
+  height: 100vh; /* Doble de alto */
   object-fit: cover;
   object-position: top center;
   display: block;
   position: absolute;
-  top: 0;
-  left: 0;
-}
-
-#bg-svg img[src*="Bg_Enter.svg"] {
-  position: fixed;
-  inset: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-  height: 100dvh !important;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-  z-index: -1;
-  top: 0;
-  left: 0;
+  margin-top: 100%;
 }
 
 #title-svg {
@@ -242,7 +226,7 @@ body, html, * {
   flex-shrink: 0;
   color: #FFF;
   text-align: center;
-  font-family: 'Glancyr', Arial, sans-serif;
+  font-family: 'Glancyr-Light' !important;
   font-size: 48px;
   font-style: normal;
   font-weight: 500;
@@ -397,17 +381,17 @@ body, html, * {
     height: 100vh;
     object-fit: cover;
     object-position: center;
+    margin-top: 100%;
   }
   .qr-popup-content {
     padding-top: 3em;
   }
 } 
 
-#mensaje-escaneo, #descubre-faccion {
-  font-family: 'Glancyr-Light', Arial, sans-serif !important;
+#mensaje-escaneo,
+#descubre-faccion {
+  font-family: 'Glancyr-Light' !important;
   font-weight: 300 !important;
-  font-style: normal !important;
-  letter-spacing: 0.5px !important;
-  text-transform: uppercase !important;
-  color: inherit;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 } 
