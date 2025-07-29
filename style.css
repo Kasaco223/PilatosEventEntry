@@ -45,12 +45,12 @@ html, body {
 
 #title-svg {
   position: fixed;
-  top: 6vw;
+  top: 13vw; /* 3vw + 10vw (10% pantalla) */
   left: 50%;
   transform: translateX(-50%);
-  width: 30vw; /* Igual que los popups */
-  max-width: 98vw;
-  min-width: 320px;
+  width: 88.8vw; /* 74vw * 1.2 = 88.8vw */
+  max-width: 117.6vw; /* 98vw * 1.2 = 117.6vw */
+  min-width: 384px; /* 320px * 1.2 = 384px */
   z-index: 0;
   pointer-events: none;
   user-select: none;
@@ -399,11 +399,11 @@ body, html, * {
 .escanea-qr {
   position: fixed;
   left: 50%;
-  top: 28%;
+  top: 38%; /* 28% + 10% de la pantalla */
   transform: translate(-50%, -50%);
   font-family: 'Glancyr-Light', Arial, sans-serif !important;
   font-weight: 300 !important;
-  font-size: 2.56vw;
+  font-size: 3.07vw; /* 2.56vw * 1.2 = 3.072vw */
   color: #FFF;
   text-align: center;
   text-transform: uppercase;
